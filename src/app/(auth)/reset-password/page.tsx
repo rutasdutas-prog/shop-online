@@ -1,7 +1,6 @@
 import { updatePassword } from '@/actions/auth.actions'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { SubmitButton } from '@/components/submit-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +29,7 @@ export default async function ResetPasswordPage(props: { searchParams: Promise<{
                 name="password"
                 type="password"
                 required
+                minLength={6}
                 className="h-9 text-sm border-zinc-200"
               />
             </div>
@@ -40,9 +40,12 @@ export default async function ResetPasswordPage(props: { searchParams: Promise<{
               </div>
             )}
 
-            <SubmitButton pendingText="Menyimpan..." className="w-full h-10 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-sm font-medium transition-all shadow-sm">
+            <button
+              type="submit"
+              className="w-full h-10 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-sm font-medium transition-all shadow-sm"
+            >
               Simpan Password Baru
-            </SubmitButton>
+            </button>
           </form>
         </div>
       </div>

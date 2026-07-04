@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { signout } from '@/actions/auth.actions'
 import { getLanguage } from '@/actions/language.actions'
 import { dictionaries } from '@/lib/i18n/dictionaries'
-import { signout } from '@/actions/auth.actions'
 import { DashboardChatbot } from '@/components/chat/dashboard-chatbot'
 
 export const dynamic = 'force-dynamic'
@@ -93,7 +92,7 @@ export default async function DashboardLayout({
 
           <div className="flex items-center gap-2.5 px-3 py-2">
             <div className="w-6 h-6 rounded-full bg-zinc-200 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-zinc-600">
-              {profile?.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+              {user.email?.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs text-zinc-600 truncate">{user.email}</p>
