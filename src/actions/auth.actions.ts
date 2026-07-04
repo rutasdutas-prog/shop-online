@@ -8,7 +8,13 @@ import { headers } from 'next/headers'
 export async function loginWithGoogle() {
   const supabase = await createClient()
   const headersList = await headers()
-  const origin = headersList.get('origin') || 'http://localhost:3000'
+  
+  // Resolve the correct origin for Vercel deployments
+  const host = headersList.get('host')
+  const protocol = host?.includes('localhost') ? 'http' : 'https'
+  const origin = headersList.get('origin') || 
+                 (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+                 (host ? `${protocol}://${host}` : 'http://localhost:3000'))
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
