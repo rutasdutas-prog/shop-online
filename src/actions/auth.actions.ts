@@ -9,12 +9,10 @@ export async function loginWithGoogle() {
   const supabase = await createClient()
   const headersList = await headers()
   
-  // Resolve the correct origin for Vercel deployments
-  const host = headersList.get('host')
-  const protocol = host?.includes('localhost') ? 'http' : 'https'
-  const origin = headersList.get('origin') || 
-                 (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
-                 (host ? `${protocol}://${host}` : 'http://localhost:3000'))
+  // Gunakan host langsung dari request header agar selalu cocok dengan domain saat ini
+  const host = headersList.get('x-forwarded-host') || headersList.get('host') || 'localhost:3000'
+  const protocol = host.includes('localhost') ? 'http' : 'https'
+  const origin = `${protocol}://${host}`
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
