@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { signout } from '@/actions/auth.actions'
 import { getLanguage } from '@/actions/language.actions'
 import { dictionaries } from '@/lib/i18n/dictionaries'
-import { LanguageToggle } from '@/components/ui/language-toggle'
+import { signout } from '@/actions/auth.actions'
 import { DashboardChatbot } from '@/components/chat/dashboard-chatbot'
 
 export const dynamic = 'force-dynamic'
@@ -90,21 +90,20 @@ export default async function DashboardLayout({
               <span>{lang === 'id' ? 'Lihat Toko Publik' : 'View Public Store'}</span>
             </Link>
           )}
+
           <div className="flex items-center gap-2.5 px-3 py-2">
-            <div className="w-6 h-6 bg-zinc-200 rounded-full flex items-center justify-center shrink-0">
-              <span className="text-xs text-zinc-600">{user.email?.[0]?.toUpperCase()}</span>
+            <div className="w-6 h-6 rounded-full bg-zinc-200 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-zinc-600">
+              {profile?.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs text-zinc-500 truncate">{user.email}</div>
+              <p className="text-xs text-zinc-600 truncate">{user.email}</p>
             </div>
           </div>
+
           <form action={signout}>
-            <button
-              type="submit"
-              className="w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-            >
-              <span>→</span>
-              <span>{lang === 'id' ? 'Keluar' : 'Sign Out'}</span>
+            <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-zinc-500 hover:text-red-600 hover:bg-red-50 transition-colors text-left mt-1">
+              <span>←</span>
+              <span>Keluar</span>
             </button>
           </form>
         </div>
@@ -116,7 +115,6 @@ export default async function DashboardLayout({
         <header className="h-14 bg-white border-b border-zinc-100 flex items-center px-6 sticky top-0 z-10">
           <div className="flex-1" />
           <div className="flex items-center gap-3">
-            <LanguageToggle currentLocale={lang} />
             {store && (
               <Link
                 href={`/${store.slug}`}

@@ -775,10 +775,18 @@ PANDUAN:
     ]
 
     const isOpenAI = apiKey.startsWith('sk-')
-    const apiUrl = isOpenAI
-      ? 'https://api.openai.com/v1/chat/completions'
-      : 'https://api.groq.com/openai/v1/chat/completions'
-    const model = isOpenAI ? 'gpt-4o-mini' : 'llama-3.1-8b-instant'
+    const isGemini = apiKey.startsWith('AIza') || apiKey.startsWith('AQ.')
+    
+    let apiUrl = 'https://api.groq.com/openai/v1/chat/completions'
+    let model = 'llama-3.1-8b-instant'
+    
+    if (isOpenAI) {
+      apiUrl = 'https://api.openai.com/v1/chat/completions'
+      model = 'gpt-4o-mini'
+    } else if (isGemini) {
+      apiUrl = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'
+      model = 'gemini-1.5-flash'
+    }
 
     const bodyPayload: any = { model, messages: aiMessages, temperature: 0.7, max_tokens: 1024 }
     if (storeSlug) {

@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { FadeIn, StaggerContainer, StaggerItem } from '@/components/animations'
 import { getLanguage } from '@/actions/language.actions'
 import { dictionaries } from '@/lib/i18n/dictionaries'
-import { LanguageToggle } from '@/components/ui/language-toggle'
 import { StoreChatbot } from '@/components/chat/store-chatbot'
 import { AddToCartButton } from '@/components/storefront/add-to-cart-button'
 import { ProductVariantPicker } from '@/components/storefront/product-variant-picker'
@@ -55,11 +54,8 @@ export default async function StorefrontPage(
     <div className="min-h-screen bg-zinc-50" style={{ '--theme-color': themeColor } as React.CSSProperties}>
 
       {/* ═══════════════════════ HERO / HEADER ═══════════════════════ */}
-      <div className="relative bg-white overflow-hidden border-b border-zinc-200/60 min-h-[65svh] md:min-h-[75svh] flex flex-col justify-center">
-        {/* Language Toggle - floating */}
-        <div className="absolute top-4 right-4 z-20">
-          <LanguageToggle currentLocale={lang} />
-        </div>
+      <div className="relative bg-white overflow-hidden border-b border-zinc-200/60 min-h-[55svh] md:min-h-[75svh] flex flex-col justify-center">
+
 
         {/* Banner */}
         <div className="absolute inset-0 z-0 bg-zinc-900">
@@ -77,27 +73,27 @@ export default async function StorefrontPage(
           )}
         </div>
 
-        <div className="max-w-6xl mx-auto w-full px-6 py-20 relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-12">
+        <div className="max-w-6xl mx-auto w-full px-6 py-12 md:py-20 relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-12">
           {/* Logo */}
           <FadeIn delay={0.1} className="shrink-0">
             <div
-              className={`w-32 h-32 md:w-40 md:h-40 bg-white shadow-xl flex items-center justify-center overflow-hidden border-4 border-white/50 backdrop-blur-sm ${cornerStyle}`}
+              className={`w-24 h-24 md:w-40 md:h-40 bg-white shadow-xl flex items-center justify-center overflow-hidden border-4 border-white/50 backdrop-blur-sm ${cornerStyle}`}
               style={{ boxShadow: `0 20px 40px -10px ${themeColor}30` }}
             >
               {store.logo_url ? (
                 <img src={store.logo_url} alt={store.name} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-5xl font-bold" style={{ color: themeColor }}>{store.name.charAt(0).toUpperCase()}</span>
+                <span className="text-4xl md:text-5xl font-bold" style={{ color: themeColor }}>{store.name.charAt(0).toUpperCase()}</span>
               )}
             </div>
           </FadeIn>
 
           {/* Store Info */}
-          <FadeIn delay={0.2} className="flex-1 text-center md:text-left mt-4 md:mt-6">
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-white drop-shadow-lg">
+          <FadeIn delay={0.2} className="flex-1 text-center md:text-left mt-2 md:mt-6">
+            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-3 md:mb-4 text-white drop-shadow-lg leading-tight">
               {settings.hero_title}
             </h1>
-            <p className="text-lg max-w-2xl leading-relaxed mb-8 mx-auto md:mx-0 text-white/90 drop-shadow-md">
+            <p className="text-base md:text-lg max-w-2xl leading-relaxed mb-6 md:mb-8 mx-auto md:mx-0 text-white/90 drop-shadow-md">
               {settings.hero_subtitle}
             </p>
 
@@ -237,22 +233,22 @@ export default async function StorefrontPage(
                     </div>
 
                     {/* Info */}
-                    <div className="p-5 flex-1 flex flex-col">
-                      <h3 className="text-base font-semibold text-zinc-800 line-clamp-2 leading-snug mb-3 group-hover:text-[var(--theme-color)] transition-colors">{product.name}</h3>
+                    <div className="p-3 md:p-5 flex-1 flex flex-col">
+                      <h3 className="text-sm md:text-base font-semibold text-zinc-800 line-clamp-2 leading-snug mb-2 md:mb-3 group-hover:text-[var(--theme-color)] transition-colors">{product.name}</h3>
                       
                       <div className="mt-auto">
                         {/* Harga */}
-                        <div className="flex flex-col gap-1 mb-4">
+                        <div className="flex flex-col gap-0.5 md:gap-1 mb-3 md:mb-4">
                           {hasDiscount && (
-                            <span className="text-xs text-zinc-400 line-through font-medium">
+                            <span className="text-[10px] md:text-xs text-zinc-400 line-through font-medium">
                               Rp {price.toLocaleString('id-ID')}
                             </span>
                           )}
-                          <span className="text-xl font-extrabold text-zinc-900 tracking-tight" style={{ color: isOutOfStock ? '#a1a1aa' : themeColor }}>
+                          <span className="text-base md:text-xl font-extrabold text-zinc-900 tracking-tight" style={{ color: isOutOfStock ? '#a1a1aa' : themeColor }}>
                             {hasVariants ? 'Mulai ' : ''}Rp {displayPrice.toLocaleString('id-ID')}
                           </span>
                           {hasVariants && (
-                            <span className="text-xs text-zinc-400">{productVariants.length} varian tersedia</span>
+                            <span className="text-[10px] md:text-xs text-zinc-400">{productVariants.length} varian tersedia</span>
                           )}
                         </div>
 
@@ -261,17 +257,17 @@ export default async function StorefrontPage(
                           {hasVariants ? (
                             <ProductVariantPicker variants={productVariants} productName={product.name} themeColor={themeColor} lang={lang} />
                           ) : isOutOfStock ? (
-                            <button disabled className="w-full text-zinc-400 bg-zinc-100 text-sm font-semibold py-3 rounded-xl cursor-not-allowed">
+                            <button disabled className="w-full text-zinc-400 bg-zinc-100 text-xs md:text-sm font-semibold py-2 md:py-3 rounded-lg md:rounded-xl cursor-not-allowed">
                               {dict.storefront.outOfStock}
                             </button>
                           ) : store.whatsapp ? (
                             <a
                               href={`https://wa.me/62${store.whatsapp}?text=${encodeURIComponent(`Halo, saya tertarik dengan produk: *${product.name}* (Rp ${displayPrice.toLocaleString('id-ID')})`)}`}
                               target="_blank"
-                              className="w-full flex items-center justify-center gap-2 text-white text-sm font-semibold py-3 rounded-xl transition-all shadow-md active:scale-95"
+                              className="w-full flex items-center justify-center gap-1.5 md:gap-2 text-white text-xs md:text-sm font-semibold py-2 md:py-3 rounded-lg md:rounded-xl transition-all shadow-md active:scale-95"
                               style={{ backgroundColor: themeColor }}
                             >
-                              {lang === 'id' ? 'Pesan Sekarang' : 'Order Now'}
+                              {lang === 'id' ? 'Pesan' : 'Order'}
                             </a>
                           ) : (
                             <AddToCartButton productName={product.name} label={lang === 'id' ? '+ Keranjang' : '+ Cart'} />

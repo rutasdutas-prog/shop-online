@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { FadeIn, StaggerContainer, StaggerItem } from '@/components/animations'
 import { getLanguage } from '@/actions/language.actions'
 import { dictionaries } from '@/lib/i18n/dictionaries'
-import { LanguageToggle } from '@/components/ui/language-toggle'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,7 +22,6 @@ export default async function Home() {
             <span className="font-semibold text-zinc-100 text-lg tracking-tight">TokoKita</span>
           </div>
           <div className="flex items-center gap-4">
-            <LanguageToggle currentLocale={lang} />
             <Link href="/login" className="text-sm text-zinc-400 hover:text-white transition-colors font-medium hidden sm:block">
               {lang === 'id' ? 'Masuk' : 'Login'}
             </Link>

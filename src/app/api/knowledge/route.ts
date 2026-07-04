@@ -6,9 +6,9 @@ export async function POST(request: Request) {
     const { title, content } = await request.json()
     const apiKey = process.env.GEMINI_API_KEY // User's API key
     
-    if (!apiKey || !apiKey.startsWith('sk-')) {
+    if (!apiKey || (!apiKey.startsWith('sk-') && !apiKey.startsWith('AIza') && !apiKey.startsWith('AQ.'))) {
       return NextResponse.json({ 
-        error: 'Fitur Knowledge Base (RAG) membutuhkan API Key OpenAI (sk-...). Kunci Groq saat ini tidak mendukung pembuatan Embeddings.' 
+        error: 'API Key tidak valid. Masukkan kunci OpenAI (sk-...) atau Gemini (AIza... / AQ...).' 
       }, { status: 400 })
     }
 

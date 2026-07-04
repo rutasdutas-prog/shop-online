@@ -78,3 +78,36 @@ export async function signout() {
   revalidatePath('/', 'layout')
   redirect('/login')
 }
+
+export async function resetPasswordForEmail(formData: FormData) {
+  const supabase = await createClient()
+  const email = formData.get('email') as string
+  const headersList = await headers()
+  
+  const host = headersList.get('x-forwarded-host') || headersList.get('host') || 'localhost:3000'
+  const protocol = host.includes('localhost') ? 'http' : 'https'
+  const origin = `${protocol}://${host}`
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/reset-password`,
+  })
+
+  if (error) {
+    redirect('/forgot-password?message=' + error.message)
+  }
+
+  redirect('/forgot-password?success=Tautan reset password telah dikirim ke email Anda.')
+}
+
+export async function updatePassword(formData: FormData) {
+  const supabase = await createClient()
+  const password = formData.get('password') as string
+
+  const { error } = await supabase.auth.updateUser({ password })
+
+  if (error) {
+    redirect('/reset-password?message=' + error.message)
+  }
+
+  redirect('/login?message=Password berhasil diubah. Silakan login kembali.')
+}

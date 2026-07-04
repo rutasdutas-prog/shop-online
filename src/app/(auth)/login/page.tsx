@@ -62,7 +62,7 @@ export default async function LoginPage(props: { searchParams: Promise<{ message
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-xs font-medium text-zinc-700">Password</Label>
-                <Link href="#" className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors">Lupa password?</Link>
+                <Link href="/forgot-password" className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors">Lupa password?</Link>
               </div>
               <Input
                 id="password"
