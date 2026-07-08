@@ -35,7 +35,7 @@ export class AIService {
       apiUrl = 'https://api.openai.com/v1/chat/completions'
       model = 'gpt-4o-mini'
     } else if (isGemini) {
-      apiUrl = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'
+      apiUrl = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions?key=${apiKey}`
       model = 'gemini-1.5-flash'
     }
 
@@ -63,9 +63,16 @@ export class AIService {
     })
 
     if (!response.ok) {
-      const errData = await response.json()
-      console.error('API Error:', errData)
-      throw new Error(`Error AI: ${errData.error?.message || 'Unknown'}`)
+      const errText = await response.text()
+      console.error('API Error:', errText)
+      let errMsg = 'Unknown'
+      try {
+        const errData = JSON.parse(errText)
+        errMsg = errData.error?.message || errData.message || errText
+      } catch (e) {
+        errMsg = errText
+      }
+      throw new Error(`Error AI: ${errMsg}`)
     }
 
     const data = await response.json()
@@ -86,7 +93,8 @@ export class AIService {
     })
     
     if (!response.ok) {
-       throw new Error('Follow-up request failed')
+       const errText = await response.text()
+       throw new Error(`Follow-up request failed: ${errText}`)
     }
     return response.json()
   }

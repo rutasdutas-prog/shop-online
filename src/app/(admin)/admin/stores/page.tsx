@@ -17,7 +17,7 @@ export default async function AdminStoresPage() {
     .order('created_at', { ascending: false })
 
   // Get product counts per store and owner emails
-  const ownerIds = (stores || []).map(s => s.owner_id)
+  const ownerIds = (stores || []).map(s => s.owner_id).filter(Boolean)
 
   const { data: owners } = await supabase
     .from('users')
