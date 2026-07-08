@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { toggleStoreStatus } from '@/actions/admin.actions'
+import { revalidatePath } from 'next/cache'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,6 +70,7 @@ export default async function AdminOverviewPage() {
 
       {/* Recent Stores */}
       <div className="bg-zinc-900 border border-white/5 rounded-2xl overflow-hidden">
+
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
           <h2 className="text-sm font-semibold text-white">Toko Terbaru</h2>
           <Link href="/admin/stores" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Lihat semua →</Link>
@@ -81,18 +84,44 @@ export default async function AdminOverviewPage() {
                 </div>
                 <div>
                   <div className="text-sm font-medium text-white">{store.name}</div>
-                  <div className="text-xs text-zinc-500">/{store.slug}</div>
+                  <a href={`/${store.slug}`} target="_blank" className="text-xs text-violet-400 hover:underline hover:text-violet-300">
+                    /{store.slug}
+                  </a>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                  store.status === 'ACTIVE' 
-                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                    : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                }`}>
-                  {store.status === 'ACTIVE' ? 'Aktif' : 'Suspend'}
+                <form action={toggleStoreStatus}>
+                  <input type="hidden" name="store_id" value={store.id} />
+                  <input type="hidden" name="current_status" value={store.status} />
+                  <button type="submit" className={`text-xs px-2.5 py-1 rounded-full font-medium hover:scale-105 transition-transform ${
+                    store.status === 'ACTIVE' 
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20' 
+                      : 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/20'
+                  }`}
+                  title={store.status === 'ACTIVE' ? 'Klik untuk Suspend' : 'Klik untuk Aktifkan'}
+                  >
+                    {store.status === 'ACTIVE' ? 'Aktif' : 'Suspend'}
+                  </button>
+                </form>
+                <form action={async () => {
+                  'use server'
+                  const supabase = await createClient()
+                  await supabase.from('stores').delete().eq('id', store.id)
+                  // Delete user as well if needed? User is handled separately usually.
+                  // Wait, deleting store is enough for "remove store".
+                }}>
+                  <button formAction={async () => {
+                     'use server'
+                     const supabase = await createClient()
+                     await supabase.from('stores').delete().eq('id', store.id)
+                     revalidatePath('/admin')
+                  }} type="submit" className="text-xs text-red-400/50 hover:text-red-400 transition-colors" title="Hapus Toko">
+                    Hapus
+                  </button>
+                </form>
+                <span className="text-xs text-zinc-600" title="Tanggal Bergabung">
+                  {new Date(store.created_at).toLocaleDateString('id-ID')}
                 </span>
-                <span className="text-xs text-zinc-600">{new Date(store.created_at).toLocaleDateString('id-ID')}</span>
               </div>
             </div>
           ))}

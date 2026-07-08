@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { aiService } from '@/services/ai.service'
+import { chatRepository } from '@/repositories/chat.repository'
 
 // ─── CART HELPER ─────────────────────────────────────────────────────────────
 async function getOrCreateCart(supabase: any, storeId: string, sessionId: string) {
@@ -768,48 +770,24 @@ PANDUAN:
 - Gunakan emoji secukupnya`
     }
 
-    // ── Kirim ke AI ───────────────────────────────────────────────────────
-    const aiMessages = [
-      { role: 'system', content: systemPrompt },
-      ...messages.map((m: any) => ({ role: m.role, content: m.content }))
-    ]
-
-    const isOpenAI = apiKey.startsWith('sk-')
-    const isGemini = apiKey.startsWith('AIza') || apiKey.startsWith('AQ.')
+    // ── Kirim ke AI (menggunakan Clean Architecture & History) ────────────────
+    const latestUserMessage = messages.filter((m: any) => m.role === 'user').pop()?.content || ''
     
-    let apiUrl = 'https://api.groq.com/openai/v1/chat/completions'
-    let model = 'llama-3.1-8b-instant'
+    // Pastikan session ID ada di DB
+    const sid = sessionId || 'guest-default'
+    const dbSessionId = await chatRepository.getOrCreateSession(storeId || '00000000-0000-0000-0000-000000000000', sid)
+
+    const tools = storeSlug ? STORE_TOOLS : (isDashboard ? DASHBOARD_TOOLS : null)
+
+    const aiRes = await aiService.getChatCompletion(
+      dbSessionId,
+      systemPrompt,
+      latestUserMessage,
+      apiKey,
+      tools
+    )
     
-    if (isOpenAI) {
-      apiUrl = 'https://api.openai.com/v1/chat/completions'
-      model = 'gpt-4o-mini'
-    } else if (isGemini) {
-      apiUrl = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'
-      model = 'gemini-1.5-flash'
-    }
-
-    const bodyPayload: any = { model, messages: aiMessages, temperature: 0.7, max_tokens: 1024 }
-    if (storeSlug) {
-      bodyPayload.tools = STORE_TOOLS
-      bodyPayload.tool_choice = 'auto'
-    } else if (isDashboard) {
-      bodyPayload.tools = DASHBOARD_TOOLS
-      bodyPayload.tool_choice = 'auto'
-    }
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-      body: JSON.stringify(bodyPayload)
-    })
-
-    if (!response.ok) {
-      const errData = await response.json()
-      return NextResponse.json({ error: `Error AI: ${errData.error?.message || 'Unknown'}` }, { status: 500 })
-    }
-
-    const data = await response.json()
-    const choice = data.choices?.[0]
+    const choice = aiRes.data.choices?.[0]
 
     // ── Handle Tool Calls ─────────────────────────────────────────────────
     if (choice?.finish_reason === 'tool_calls' && choice?.message?.tool_calls?.length > 0) {
@@ -818,7 +796,6 @@ PANDUAN:
       const fnArgs = JSON.parse(toolCall.function.arguments || '{}') || {}
 
       let toolResult = ''
-      const sid = sessionId || 'guest-default'
 
       // Storefront tools
       if (fnName === 'tambah_ke_keranjang') toolResult = await execTambahKeKeranjang(supabase, storeId, sid, fnArgs.nama_produk, fnArgs.jumlah ?? 1)
@@ -841,27 +818,32 @@ PANDUAN:
 
       // Follow-up ke AI dengan hasil tool
       const followUpMsgs = [
-        ...aiMessages,
+        ...aiRes.aiMessages,
         { role: 'assistant', content: null, tool_calls: choice.message.tool_calls },
         { role: 'tool', tool_call_id: toolCall.id, content: toolResult }
       ]
 
-      const followUp = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-        body: JSON.stringify({ model, messages: followUpMsgs, temperature: 0.7, max_tokens: 512 })
-      })
-
-      if (followUp.ok) {
-        const fuData = await followUp.json()
-        const finalText = fuData.choices?.[0]?.message?.content || toolResult
-        return NextResponse.json({ message: finalText, toolResult, toolName: fnName })
+      const followUpPayload = {
+        model: aiRes.model,
+        messages: followUpMsgs,
+        temperature: 0.7,
+        max_tokens: 512
       }
 
-      return NextResponse.json({ message: toolResult, toolName: fnName })
+      try {
+        const fuData = await aiService.getFollowUpCompletion(aiRes.apiUrl, apiKey, followUpPayload)
+        const finalText = fuData.choices?.[0]?.message?.content || toolResult
+        await aiService.saveAssistantReply(dbSessionId, finalText)
+        return NextResponse.json({ message: finalText, toolResult, toolName: fnName })
+      } catch (err) {
+        await aiService.saveAssistantReply(dbSessionId, toolResult)
+        return NextResponse.json({ message: toolResult, toolName: fnName })
+      }
     }
 
-    return NextResponse.json({ message: choice?.message?.content || 'Maaf, tidak ada respons.' })
+    const reply = choice?.message?.content || 'Maaf, tidak ada respons.'
+    await aiService.saveAssistantReply(dbSessionId, reply)
+    return NextResponse.json({ message: reply })
 
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
