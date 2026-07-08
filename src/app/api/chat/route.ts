@@ -831,7 +831,7 @@ PANDUAN:
       }
 
       try {
-        const fuData = await aiService.getFollowUpCompletion(aiRes.apiUrl, apiKey, followUpPayload)
+        const fuData = await aiService.getFollowUpCompletion(aiRes.apiUrl, apiKey, followUpPayload, aiRes.isGemini)
         const finalText = fuData.choices?.[0]?.message?.content || toolResult
         await aiService.saveAssistantReply(dbSessionId, finalText)
         return NextResponse.json({ message: finalText, toolResult, toolName: fnName })
