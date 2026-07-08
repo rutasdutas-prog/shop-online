@@ -76,7 +76,7 @@ export class AIService {
    * Eksekusi native Gemini API untuk menghindari bug OpenAI compatibility layer
    */
   async executeGeminiNative(apiKey: string, systemPrompt: string, history: any[], newMessage: string, tools: any[] | null) {
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`
     
     let contents = history.map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
@@ -140,7 +140,7 @@ export class AIService {
       { role: 'user', content: newMessage }
     ]
 
-    return { data: { choices: [choice] }, apiUrl, model: 'gemini-1.5-flash', aiMessages, isGemini: true }
+    return { data: { choices: [choice] }, apiUrl, model: 'gemini-1.5-flash-latest', aiMessages, isGemini: true }
   }
 
   /**
