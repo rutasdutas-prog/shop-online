@@ -34,7 +34,7 @@ export class AIService {
 
     // --- Format OpenAI / Groq ---
     let apiUrl = 'https://api.groq.com/openai/v1/chat/completions'
-    let model = 'llama-3.1-8b-instant'
+    let model = 'llama-3.3-70b-versatile'
     if (isOpenAI) {
       apiUrl = 'https://api.openai.com/v1/chat/completions'
       model = 'gpt-4o-mini'
