@@ -788,6 +788,34 @@ PANDUAN:
     )
     
     const choice = aiRes.data.choices?.[0]
+    let replyContent = choice?.message?.content || ''
+
+    // --- FALLBACK: Tangkap halusinasi XML Llama ---
+    if (choice?.finish_reason !== 'tool_calls' && replyContent.includes('<') && replyContent.includes('</function>')) {
+      const match1 = replyContent.match(/<([a-zA-Z0-9_]+)>(.*?)<\/function>/s)
+      const match2 = replyContent.match(/<function=([a-zA-Z0-9_]+)>(.*?)<\/function>/s)
+      const match = match2 || match1
+      
+      if (match) {
+        const fnName = match[1]
+        const fnArgsStr = match[2].trim()
+        
+        if (!choice.message) choice.message = { role: 'assistant', content: '' }
+        if (!choice.message.tool_calls) choice.message.tool_calls = []
+        
+        choice.message.tool_calls.push({
+          id: 'call_xml_' + Math.random().toString(36).substring(2),
+          type: 'function',
+          function: {
+            name: fnName,
+            arguments: fnArgsStr || '{}'
+          }
+        })
+        choice.finish_reason = 'tool_calls'
+        replyContent = replyContent.replace(match[0], '').trim()
+        choice.message.content = replyContent
+      }
+    }
 
     // ── Handle Tool Calls ─────────────────────────────────────────────────
     if (choice?.finish_reason === 'tool_calls' && choice?.message?.tool_calls?.length > 0) {
