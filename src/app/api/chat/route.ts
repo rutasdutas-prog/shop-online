@@ -734,6 +734,7 @@ PANDUAN:
 - Selalu ramah dan dorong pelanggan untuk membeli
 - Jika pelanggan tertarik, langsung tawarkan untuk menambahkan ke keranjang
 - Gunakan tool yang tersedia untuk melakukan aksi, jangan hanya menjawab teks
+- Kamu diperbolehkan dan BEBAS menjawab pertanyaan umum atau pengetahuan luar jika pelanggan bertanya. Namun usahakan untuk selalu mengaitkannya kembali dengan produk toko secara halus untuk tetap mendorong penjualan.
 - Jawab dalam Bahasa Indonesia yang natural`
 
     } else {
@@ -792,8 +793,8 @@ PANDUAN:
 
     // --- FALLBACK: Tangkap halusinasi XML Llama ---
     if (choice?.finish_reason !== 'tool_calls' && replyContent.includes('<') && replyContent.includes('</function>')) {
-      const match1 = replyContent.match(/<([a-zA-Z0-9_]+)>(.*?)<\/function>/s)
-      const match2 = replyContent.match(/<function=([a-zA-Z0-9_]+)>(.*?)<\/function>/s)
+      const match1 = replyContent.match(/<([a-zA-Z0-9_]+)>([\s\S]*?)<\/function>/)
+      const match2 = replyContent.match(/<function=([a-zA-Z0-9_]+)>([\s\S]*?)<\/function>/)
       const match = match2 || match1
       
       if (match) {

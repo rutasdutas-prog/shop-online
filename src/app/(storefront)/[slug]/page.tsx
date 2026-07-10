@@ -8,15 +8,25 @@ import { StoreChatbot } from '@/components/chat/store-chatbot'
 import { AddToCartButton } from '@/components/storefront/add-to-cart-button'
 import { ProductVariantPicker } from '@/components/storefront/product-variant-picker'
 import { SearchAutocomplete } from '@/components/storefront/search-autocomplete'
+import { CategorySidebar } from '@/components/storefront/category-sidebar'
+import { StoreSortDropdown } from '@/components/storefront/store-sort-dropdown'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function StorefrontPage(
-  props: { params: Promise<{ slug: string }> }
+  props: { 
+    params: Promise<{ slug: string }>,
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  }
 ) {
   const params = await props.params
+  const searchParams = await props.searchParams
   const { slug } = params
+  
+  const categorySlug = typeof searchParams.category === 'string' ? searchParams.category : null
+  const sortParam = typeof searchParams.sort === 'string' ? searchParams.sort : 'latest'
+
   const supabase = await createClient()
 
   const { data: store } = await supabase
@@ -28,12 +38,37 @@ export default async function StorefrontPage(
 
   if (!store) notFound()
 
-  const { data: products } = await supabase
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('id, name, slug')
+    .eq('store_id', store.id)
+    .order('name')
+
+  let categoryId = null
+  if (categorySlug && categories) {
+    const cat = categories.find(c => c.slug === categorySlug)
+    if (cat) categoryId = cat.id
+  }
+
+  let productsQuery = supabase
     .from('products')
     .select('*')
     .eq('store_id', store.id)
     .eq('status', 'PUBLISHED')
-    .order('created_at', { ascending: false })
+
+  if (categoryId) {
+    productsQuery = productsQuery.eq('category_id', categoryId)
+  }
+
+  if (sortParam === 'price_asc') {
+    productsQuery = productsQuery.order('price', { ascending: true })
+  } else if (sortParam === 'price_desc') {
+    productsQuery = productsQuery.order('price', { ascending: false })
+  } else {
+    productsQuery = productsQuery.order('created_at', { ascending: false })
+  }
+
+  const { data: products } = await productsQuery
 
   const lang = await getLanguage()
   const dict = dictionaries[lang]
@@ -141,18 +176,29 @@ export default async function StorefrontPage(
         </div>
       </div>
 
-      {/* ═══════════════════════ PRODUK ═══════════════════════ */}
-      <main className="max-w-6xl mx-auto px-6 py-16">
-        <FadeIn delay={0.3}>
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">
-              {dict.storefront.latestProducts}
-              <span className="ml-3 text-sm font-medium text-zinc-400 bg-zinc-200/50 px-2.5 py-1 rounded-full">
-                {allProducts.length}
-              </span>
-            </h2>
-          </div>
-        </FadeIn>
+      {/* ═══════════════════════ MAIN CONTENT ═══════════════════════ */}
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-16">
+        <div className="flex flex-col lg:flex-row gap-8">
+          
+          {/* SIDEBAR KATEGORI */}
+          <CategorySidebar categories={categories || []} storeSlug={slug} themeColor={themeColor} />
+
+          {/* PRODUK GRID */}
+          <div className="flex-1 min-w-0">
+            <FadeIn delay={0.3}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+                <h2 className="text-xl md:text-2xl font-bold text-zinc-900 tracking-tight">
+                  {categorySlug && categories 
+                    ? `Produk: ${categories.find(c => c.slug === categorySlug)?.name}` 
+                    : dict.storefront.latestProducts}
+                  <span className="ml-3 text-sm font-medium text-zinc-400 bg-zinc-200/50 px-2.5 py-1 rounded-full">
+                    {allProducts.length}
+                  </span>
+                </h2>
+                
+                <StoreSortDropdown />
+              </div>
+            </FadeIn>
 
         {allProducts.length === 0 ? (
           <FadeIn delay={0.4}>
@@ -304,6 +350,8 @@ export default async function StorefrontPage(
             })}
           </StaggerContainer>
         )}
+          </div>
+        </div>
       </main>
 
       {/* ═══════════════════════ FOOTER ═══════════════════════ */}
