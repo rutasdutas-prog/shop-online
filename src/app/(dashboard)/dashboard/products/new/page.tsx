@@ -63,25 +63,29 @@ function NewProductForm() {
 
   const formAction = async (formData: FormData) => {
     setIsSubmitting(true)
+    
+    formData.delete('files')
+    previews.forEach(p => { if (p.file) formData.append('files', p.file) })
+    variants.forEach((v, idx) => {
+      if (v.imageFile) formData.append(`variant_image_${idx}`, v.imageFile)
+    })
+    const variantsData = variants.map(({ imageFile, imageUrl, ...rest }) => ({
+      ...rest,
+      price: rest.price.replace(/\./g, ''),
+      stock: rest.stock,
+      imageUrl: ''
+    }))
+    formData.set('variants_json', JSON.stringify(variantsData))
+    formData.set('has_variants', hasVariants ? '1' : '0')
+    
     try {
-      formData.delete('files')
-      previews.forEach(p => { if (p.file) formData.append('files', p.file) })
-      variants.forEach((v, idx) => {
-        if (v.imageFile) formData.append(`variant_image_${idx}`, v.imageFile)
-      })
-      const variantsData = variants.map(({ imageFile, imageUrl, ...rest }) => ({
-        ...rest,
-        price: rest.price.replace(/\./g, ''),
-        stock: rest.stock,
-        imageUrl: ''
-      }))
-      formData.set('variants_json', JSON.stringify(variantsData))
-      formData.set('has_variants', hasVariants ? '1' : '0')
       await createProduct(formData)
-      router.push('/dashboard/products')
-      router.refresh()
-    } catch (e) {
+    } catch (error: any) {
+      if ((error.message && error.message.includes('NEXT_REDIRECT')) || (error.digest && error.digest.includes('NEXT_REDIRECT'))) {
+        throw error
+      }
       setIsSubmitting(false)
+      console.error(error)
     }
   }
 
