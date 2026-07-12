@@ -642,12 +642,14 @@ export async function POST(request: Request) {
       }
 
       const { data: prods } = store
-        ? await supabase.from('products').select('name, sku, price, discount_price, description').eq('store_id', store.id).eq('status', 'PUBLISHED').limit(30)
+        ? await supabase.from('products').select('name, sku, price, discount_price, description, stock').eq('store_id', store.id).in('status', ['PUBLISHED', 'ACTIVE']).limit(50)
         : { data: [] }
 
       const productList = (prods || []).map((p: any) => {
         const harga = p.discount_price ? `Rp ${p.discount_price.toLocaleString('id-ID')} (coret Rp ${p.price.toLocaleString('id-ID')})` : `Rp ${p.price.toLocaleString('id-ID')}`
-        return `- ${p.name}${p.sku ? ` [${p.sku}]` : ''}: ${harga}${p.description ? ` — ${p.description}` : ''}`
+        const stokInfo = p.stock > 0 ? ` | Stok: ${p.stock}` : ' | Stok: Habis'
+        const desc = p.description ? `\n  Deskripsi: ${p.description}` : ''
+        return `- ${p.name}${p.sku ? ` [${p.sku}]` : ''}: ${harga}${stokInfo}${desc}`
       }).join('\n')
 
       const { data: activeVouchers } = await supabase.from('vouchers').select('code, type, value, min_purchase, description').eq('store_id', storeId).eq('is_active', true)
@@ -735,6 +737,13 @@ PANDUAN:
 - Jika pelanggan tertarik, langsung tawarkan untuk menambahkan ke keranjang
 - Gunakan tool yang tersedia untuk melakukan aksi, jangan hanya menjawab teks
 - Kamu diperbolehkan dan BEBAS menjawab pertanyaan umum atau pengetahuan luar jika pelanggan bertanya. Namun usahakan untuk selalu mengaitkannya kembali dengan produk toko secara halus untuk tetap mendorong penjualan.
+- Jika pelanggan meminta bantuan PERHITUNGAN (misalnya: "berapa kebutuhan moulding untuk ruangan 4x5 meter?", "butuh berapa lembar wallpaper untuk kamar 3x4?"), WAJIB bantu hitung secara detail dan akurat:
+  1. Tanyakan dimensi ruangan jika belum diberikan (panjang, lebar, tinggi jika perlu)
+  2. Hitung menggunakan rumus yang tepat (misal: keliling ruangan x tinggi untuk wallpaper, keliling untuk border/moulding)
+  3. Tambahkan margin 10-15% untuk cadangan pemotongan
+  4. Tampilkan hasil perhitungan langkah demi langkah agar mudah dipahami
+  5. Setelah menghitung, tawarkan produk yang sesuai dari katalog dan bantu masukkan ke keranjang
+- Gunakan pengetahuan teknis bahan bangunan, dekorasi, dan material yang relevan
 - Jawab dalam Bahasa Indonesia yang natural`
 
     } else {

@@ -1,17 +1,25 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { updateProduct, deleteProduct } from '@/actions/product.actions'
 import { Label } from '@/components/ui/label'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import ImageSortableGallery, { PreviewItem } from '@/components/storefront/image-sortable-gallery'
 
 export default function EditProductForm({ product, error }: { product: any, error?: string }) {
-  const [previews, setPreviews] = useState<{ url: string; type: string; name: string, isExisting?: boolean, file?: File }[]>(
-    (product.images || []).map((url: string) => ({ url, type: url.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg', name: url.split('/').pop() || '', isExisting: true }))
+  const [previews, setPreviews] = useState<PreviewItem[]>(
+    (product.images || []).map((url: string, i: number) => ({ 
+      id: `existing-${i}`,
+      url, 
+      type: url.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg', 
+      name: url.split('/').pop() || '', 
+      isExisting: true 
+    }))
   )
   const [deletedImages, setDeletedImages] = useState<string[]>([])
-  const [dragOver, setDragOver] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
+  const hasVariants = Boolean(product.variants?.length)
   
   const [basePrice, setBasePrice] = useState(product.price?.toString() || '')
   const [discountType, setDiscountType] = useState<'FIX' | 'PERCENT'>('FIX')
@@ -19,60 +27,15 @@ export default function EditProductForm({ product, error }: { product: any, erro
   
   const finalDiscountPrice = (() => {
     if (!discountInput) return ''
-    if (discountType === 'FIX') return discountInput
+    if (discountType === 'FIX') return discountInput.replace(/\./g, '')
     const base = parseFloat(basePrice.replace(/\./g, '').replace(',', '.') || '0')
     const perc = parseFloat(discountInput)
     if (isNaN(base) || isNaN(perc)) return ''
     return Math.floor(base - (base * (perc / 100))).toString()
   })()
 
-  const handleFiles = (fileList: FileList | null) => {
-    if (!fileList) return
-    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'video/mp4']
-    const maxMB = 5
-
-    const newPreviews: { url: string; type: string; name: string, file: File }[] = []
-    
-    // Count current state
-    let currentPhotos = previews.filter(p => p.type.startsWith('image')).length
-    let currentVideos = previews.filter(p => p.type.startsWith('video')).length
-
-    for (const file of Array.from(fileList)) {
-      if (!allowed.includes(file.type)) {
-        alert(`Format tidak didukung: ${file.name}. Gunakan JPG, PNG, atau MP4.`)
-        continue
-      }
-      if (file.size > maxMB * 1024 * 1024) {
-        alert(`File terlalu besar: ${file.name}. Maksimal 5MB.`)
-        continue
-      }
-      
-      const isVideo = file.type.startsWith('video')
-      if (isVideo) {
-        if (currentVideos >= 1) {
-          alert('Maksimal hanya 1 video yang diperbolehkan.')
-          continue
-        }
-        currentVideos++
-      } else {
-        if (currentPhotos >= 10) {
-          alert('Maksimal hanya 10 foto yang diperbolehkan.')
-          continue
-        }
-        currentPhotos++
-      }
-
-      newPreviews.push({ url: URL.createObjectURL(file), type: file.type, name: file.name, file })
-    }
-    setPreviews(p => [...p, ...newPreviews])
-  }
-
-  const removePreview = (index: number) => {
-    const previewToRemove = previews[index]
-    if (previewToRemove.isExisting) {
-      setDeletedImages(prev => [...prev, previewToRemove.url])
-    }
-    setPreviews(prev => prev.filter((_, i) => i !== index))
+  const handleDeletedImage = (url: string) => {
+    setDeletedImages(prev => [...prev, url])
   }
 
   const formAction = async (formData: FormData) => {
@@ -82,6 +45,13 @@ export default function EditProductForm({ product, error }: { product: any, erro
         formData.append('files', p.file)
       }
     })
+    
+    const finalOrder = previews.map(p => ({
+      isExisting: !!p.isExisting,
+      url: p.isExisting ? p.url : p.name
+    }))
+    formData.append('final_image_order', JSON.stringify(finalOrder))
+    
     await updateProduct(formData)
   }
 
@@ -100,6 +70,8 @@ export default function EditProductForm({ product, error }: { product: any, erro
           onClick={async () => {
             if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
               await deleteProduct(product.id)
+              router.push('/dashboard/products')
+              router.refresh()
             }
           }}
           className="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -119,160 +91,94 @@ export default function EditProductForm({ product, error }: { product: any, erro
       {deletedImages.map(img => (
         <input key={img} type="hidden" name="deleted_images" value={img} />
       ))}
-
-      {/* Upload Area */}
-      <div className="bg-white rounded-xl border border-zinc-100 p-5">
-        <h2 className="text-sm font-medium text-zinc-700 mb-4">Foto & Video Produk</h2>
-        
-        {/* Drop Zone */}
-        <div
-          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${dragOver ? 'border-zinc-400 bg-zinc-50' : 'border-zinc-200 hover:border-zinc-300'}`}
-          onClick={() => fileInputRef.current?.click()}
-          onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={e => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files) }}
-        >
-          <div className="text-3xl mb-2">📁</div>
-          <p className="text-sm font-medium text-zinc-700">Klik atau drag & drop file di sini</p>
-          <p className="text-xs text-zinc-400 mt-1">JPG, PNG, MP4 · Maks. 5MB per file</p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            name="files"
-            multiple
-            accept=".jpg,.jpeg,.png,.mp4"
-            className="hidden"
-            onChange={e => handleFiles(e.target.files)}
-          />
-        </div>
-
-        {/* Preview Grid */}
-        {previews.length > 0 && (
-          <div className="grid grid-cols-4 gap-3 mt-4">
-            {previews.map((p, i) => (
-              <div key={i} className="relative group aspect-square rounded-lg overflow-hidden bg-zinc-100 border border-zinc-200">
-                {p.type === 'video/mp4' ? (
-                  <video src={p.url} className="w-full h-full object-cover" />
-                ) : (
-                  <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
-                )}
-                <button
-                  type="button"
-                  onClick={() => removePreview(i)}
-                  className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  ×
-                </button>
-                {p.type === 'video/mp4' && (
-                  <div className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">MP4</div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      
+      <ImageSortableGallery previews={previews} setPreviews={setPreviews} onDeleted={handleDeletedImage} />
 
       {/* Informasi Produk */}
       <div className="bg-white rounded-xl border border-zinc-100 p-5 space-y-4">
         <h2 className="text-sm font-medium text-zinc-700">Informasi Produk</h2>
         
         <div className="space-y-1.5">
-          <Label htmlFor="name" className="text-xs font-medium text-zinc-600">Nama Produk</Label>
-          <input
-            id="name"
-            name="name"
-            required
-            defaultValue={product.name}
-            className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors"
-          />
+          <Label htmlFor="name" className="text-xs font-medium text-zinc-600">Nama Produk <span className="text-red-500">*</span></Label>
+          <input id="name" name="name" required defaultValue={product.name}
+            className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors" />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label htmlFor="sku" className="text-xs font-medium text-zinc-600">
-              SKU <span className="text-zinc-400 font-normal">(Opsional)</span>
-            </Label>
-            <input
-              id="sku"
-              name="sku"
-              defaultValue={product.sku || ''}
-              className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors"
-            />
+            <Label htmlFor="sku" className="text-xs font-medium text-zinc-600">SKU / GTIN <span className="text-zinc-400 font-normal">(Opsional)</span></Label>
+            <input id="sku" name="sku" defaultValue={product.sku || ''} placeholder="Masukkan SKU atau GTIN"
+              className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="status" className="text-xs font-medium text-zinc-600">Status</Label>
-            <select
-              id="status"
-              name="status"
-              defaultValue={product.status}
-              className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors"
-            >
-              <option value="PUBLISHED">Aktif</option>
-              <option value="DRAFT">Draft</option>
-              <option value="ARCHIVED">Arsip</option>
+            <Label htmlFor="status" className="text-xs font-medium text-zinc-600">Status <span className="text-red-500">*</span></Label>
+            <select name="status" required defaultValue={product.status || 'ACTIVE'}
+              className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors bg-white">
+              <option value="ACTIVE">Aktif</option>
+              <option value="DRAFT">Draft / Nonaktif</option>
             </select>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="price" className="text-xs font-medium text-zinc-600">Harga (Rp)</Label>
-            <div className="flex items-center h-9 border border-zinc-200 rounded-lg overflow-hidden focus-within:border-zinc-400 transition-colors">
-              <span className="px-3 text-xs text-zinc-400 bg-zinc-50 border-r border-zinc-200 h-full flex items-center">Rp</span>
-              <input
-                id="price"
-                name="price"
-                required
-                defaultValue={product.price}
-                onChange={e => setBasePrice(e.target.value)}
-                inputMode="numeric"
-                className="flex-1 px-3 text-sm outline-none bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
+        {/* Harga & Diskon — hidden when has variants */}
+        {!hasVariants && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="price" className="text-xs font-medium text-zinc-600">Harga <span className="text-red-500">*</span></Label>
+              <div className="flex items-center h-9 border border-zinc-200 rounded-lg overflow-hidden focus-within:border-zinc-400 transition-colors">
+                <span className="px-3 text-xs text-zinc-400 bg-zinc-50 border-r border-zinc-200 h-full flex items-center">Rp</span>
+                <input id="price" required type="text" value={basePrice}
+                  onChange={e => { const val = e.target.value.replace(/\D/g, ''); setBasePrice(val ? parseInt(val).toLocaleString('id-ID') : '') }}
+                  className="flex-1 px-3 text-sm outline-none bg-transparent" />
+                <input type="hidden" name="price" value={basePrice.replace(/\./g, '')} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="discount_input" className="text-xs font-medium text-zinc-600">Diskon <span className="text-zinc-400 font-normal">(Opsional)</span></Label>
+              <div className="flex items-center h-9 border border-zinc-200 rounded-lg overflow-hidden focus-within:border-zinc-400 transition-colors">
+                <select className="px-2 text-xs text-zinc-600 bg-zinc-50 border-r border-zinc-200 h-full outline-none" value={discountType}
+                  onChange={e => setDiscountType(e.target.value as 'FIX' | 'PERCENT')}>
+                  <option value="FIX">Rp</option>
+                  <option value="PERCENT">%</option>
+                </select>
+                <input id="discount_input" type="text" value={discountInput}
+                  onChange={e => {
+                    if (discountType === 'FIX') { const val = e.target.value.replace(/\D/g, ''); setDiscountInput(val ? parseInt(val).toLocaleString('id-ID') : '') }
+                    else setDiscountInput(e.target.value.replace(/[^0-9.]/g, ''))
+                  }}
+                  className="flex-1 px-3 text-sm outline-none bg-transparent" />
+                <input type="hidden" name="discount_price" value={finalDiscountPrice} />
+              </div>
+              {discountType === 'PERCENT' && discountInput && (
+                <p className="text-[10px] text-zinc-500">Harga akhir: Rp {parseInt(finalDiscountPrice || '0').toLocaleString('id-ID')}</p>
+              )}
             </div>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="discount_input" className="text-xs font-medium text-zinc-600">
-              Diskon <span className="text-zinc-400 font-normal">(Opsional)</span>
-            </Label>
-            <div className="flex items-center h-9 border border-zinc-200 rounded-lg overflow-hidden focus-within:border-zinc-400 transition-colors">
-              <select 
-                className="px-2 text-xs text-zinc-600 bg-zinc-50 border-r border-zinc-200 h-full outline-none"
-                value={discountType}
-                onChange={e => setDiscountType(e.target.value as 'FIX' | 'PERCENT')}
-              >
-                <option value="FIX">Rp</option>
-                <option value="PERCENT">%</option>
-              </select>
-              <input
-                id="discount_input"
-                name="discount_input"
-                defaultValue={product.discount_price || ''}
-                onChange={e => setDiscountInput(e.target.value)}
-                inputMode="numeric"
-                className="flex-1 px-3 text-sm outline-none bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
+        )}
+
+        {/* Stok — hidden when has variants */}
+        {!hasVariants && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="stock" className="text-xs font-medium text-zinc-600">Stok <span className="text-red-500">*</span></Label>
+              <input id="stock" name="stock" type="number" required min="0" defaultValue={product.stock}
+                className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors" />
             </div>
-            <input type="hidden" name="discount_price" value={finalDiscountPrice} />
-            {discountType === 'PERCENT' && discountInput && (
-              <p className="text-[10px] text-zinc-500">Harga akhir: Rp {parseInt(finalDiscountPrice || '0').toLocaleString('id-ID')}</p>
-            )}
           </div>
-        </div>
+        )}
 
         <div className="space-y-1.5">
-          <Label htmlFor="description" className="text-xs font-medium text-zinc-600">Deskripsi Produk</Label>
-          <textarea
-            id="description"
-            name="description"
-            rows={4}
-            defaultValue={product.description || ''}
-            className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors resize-none"
-          />
+          <Label htmlFor="description" className="text-xs font-medium text-zinc-600">Deskripsi Produk <span className="text-red-500">*</span></Label>
+          <textarea id="description" name="description" rows={6} defaultValue={product.description || ''}
+            className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors resize-none" />
         </div>
       </div>
 
       {/* Submit */}
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end gap-3">
+        <Link href="/dashboard/products" className="text-sm text-zinc-500 hover:text-zinc-700 px-4 py-2.5 rounded-lg border border-zinc-200 transition-colors">
+          Batal
+        </Link>
         <button
           type="submit"
           className="bg-zinc-900 text-white text-sm font-medium px-6 py-2.5 rounded-lg hover:bg-zinc-700 transition-colors"
