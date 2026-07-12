@@ -26,7 +26,7 @@ export class AIService {
 
     // 4. Deteksi Provider
     const isOpenAI = apiKey.startsWith('sk-')
-    const isGemini = apiKey.startsWith('AIza') || apiKey.startsWith('AQ.')
+    const isGemini = apiKey.startsWith('AIza') || apiKey.startsWith('AQ')
     
     if (isGemini) {
       return this.executeGeminiNative(apiKey, systemPrompt, history, newMessage, tools)

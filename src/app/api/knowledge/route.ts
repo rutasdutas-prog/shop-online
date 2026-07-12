@@ -6,7 +6,7 @@ export async function POST(request: Request) {
     const { title, content } = await request.json()
     const apiKey = process.env.GEMINI_API_KEY // User's API key
     
-    if (!apiKey || (!apiKey.startsWith('sk-') && !apiKey.startsWith('AIza') && !apiKey.startsWith('AQ.'))) {
+    if (!apiKey || (!apiKey.startsWith('sk-') && !apiKey.startsWith('AIza') && !apiKey.startsWith('AQ'))) {
       return NextResponse.json({ 
         error: 'API Key tidak valid. Masukkan kunci OpenAI (sk-...) atau Gemini (AIza... / AQ...).' 
       }, { status: 400 })
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
       const data = await res.json()
       embedding = data.data[0].embedding
-    } else if (apiKey.startsWith('AIza') || apiKey.startsWith('AQ.')) {
+    } else if (apiKey.startsWith('AIza') || apiKey.startsWith('AQ')) {
       // Gemini
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${apiKey}`, {
         method: 'POST',

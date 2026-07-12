@@ -669,7 +669,7 @@ export async function POST(request: Request) {
               const data = await res.json()
               queryEmbedding = data.data[0].embedding
             }
-          } else if (apiKey.startsWith('AIza') || apiKey.startsWith('AQ.')) {
+          } else if (apiKey.startsWith('AIza') || apiKey.startsWith('AQ')) {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${apiKey}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },

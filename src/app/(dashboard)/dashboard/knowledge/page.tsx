@@ -15,7 +15,7 @@ export default async function KnowledgePage() {
     : { data: [] }
 
   const apiKey = process.env.GEMINI_API_KEY || ''
-  const isGroq = Boolean(apiKey && !(apiKey.startsWith('sk-') || apiKey.startsWith('AIza') || apiKey.startsWith('AQ.')))
+  const isGroq = Boolean(apiKey && !(apiKey.startsWith('sk-') || apiKey.startsWith('AIza') || apiKey.startsWith('AQ')))
 
   return (
     <div className="space-y-6">
