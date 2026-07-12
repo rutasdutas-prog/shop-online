@@ -18,6 +18,7 @@ export default function EditProductForm({ product, error }: { product: any, erro
     }))
   )
   const [deletedImages, setDeletedImages] = useState<string[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
   const hasVariants = Boolean(product.variants?.length)
   
@@ -39,6 +40,7 @@ export default function EditProductForm({ product, error }: { product: any, erro
   }
 
   const formAction = async (formData: FormData) => {
+    setIsSubmitting(true)
     formData.delete('files')
     previews.forEach(p => {
       if (p.file) {
@@ -52,7 +54,15 @@ export default function EditProductForm({ product, error }: { product: any, erro
     }))
     formData.append('final_image_order', JSON.stringify(finalOrder))
     
-    await updateProduct(formData)
+    try {
+      await updateProduct(formData)
+    } catch (error: any) {
+      if ((error.message && error.message.includes('NEXT_REDIRECT')) || (error.digest && error.digest.includes('NEXT_REDIRECT'))) {
+        throw error
+      }
+      setIsSubmitting(false)
+      console.error(error)
+    }
   }
 
   return (
@@ -112,9 +122,9 @@ export default function EditProductForm({ product, error }: { product: any, erro
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="status" className="text-xs font-medium text-zinc-600">Status <span className="text-red-500">*</span></Label>
-            <select name="status" required defaultValue={product.status || 'ACTIVE'}
+            <select name="status" required defaultValue={product.status || 'PUBLISHED'}
               className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors bg-white">
-              <option value="ACTIVE">Aktif</option>
+              <option value="PUBLISHED">Aktif / Publik</option>
               <option value="DRAFT">Draft / Nonaktif</option>
             </select>
           </div>
@@ -181,9 +191,12 @@ export default function EditProductForm({ product, error }: { product: any, erro
         </Link>
         <button
           type="submit"
-          className="bg-zinc-900 text-white text-sm font-medium px-6 py-2.5 rounded-lg hover:bg-zinc-700 transition-colors"
+          disabled={isSubmitting}
+          className="bg-zinc-900 text-white text-sm font-medium px-6 py-2.5 rounded-lg hover:bg-zinc-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          Simpan Perubahan
+          {isSubmitting ? (
+            <><span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> Menyimpan...</>
+          ) : 'Simpan Perubahan'}
         </button>
       </div>
     </form>
