@@ -18,8 +18,10 @@ export async function updateAppearance(formData: FormData) {
   const cornerStyle = formData.get('corner_style') as string
   const gradientFrom = formData.get('gradient_from') as string
   const gradientTo = formData.get('gradient_to') as string
+  const themeName = formData.get('theme_name') as string
   
   const theme_settings = {
+    theme_name: themeName || 'custom',
     theme_color: themeColor || '#000000',
     hero_title: heroTitle || 'Selamat Datang',
     hero_subtitle: heroSubtitle || 'Temukan produk terbaik kami',

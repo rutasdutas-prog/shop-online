@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { createProduct, getCategories } from '@/actions/product.actions'
 import { Label } from '@/components/ui/label'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
-import { useRouter } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import ImageSortableGallery, { PreviewItem } from '@/components/storefront/image-sortable-gallery'
 
 interface Variant {
@@ -16,7 +15,8 @@ interface Variant {
   imageFile?: File
 }
 
-export default function NewProductPage() {
+// Inner component that uses useSearchParams
+function NewProductForm() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const errorParam = searchParams.get('error')
@@ -28,6 +28,7 @@ export default function NewProductPage() {
   const [discountInput, setDiscountInput] = useState('')
   const [variants, setVariants] = useState<Variant[]>([])
   const [hasVariants, setHasVariants] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     getCategories().then(setCategories)
@@ -41,8 +42,6 @@ export default function NewProductPage() {
     if (isNaN(base) || isNaN(perc)) return ''
     return Math.floor(base - base * (perc / 100)).toString()
   })()
-
-
 
   const addVariant = () => {
     setVariants(v => [...v, { name: '', price: '', stock: '0', imageUrl: '' }])
@@ -63,28 +62,31 @@ export default function NewProductPage() {
   }
 
   const formAction = async (formData: FormData) => {
-    formData.delete('files')
-    previews.forEach(p => { if (p.file) formData.append('files', p.file) })
-    // Attach variant images
-    variants.forEach((v, idx) => {
-      if (v.imageFile) formData.append(`variant_image_${idx}`, v.imageFile)
-    })
-    // Attach variants as JSON
-    const variantsData = variants.map(({ imageFile, imageUrl, ...rest }) => ({
-      ...rest,
-      price: rest.price.replace(/\./g, ''),
-      stock: rest.stock,
-      imageUrl: ''
-    }))
-    formData.set('variants_json', JSON.stringify(variantsData))
-    formData.set('has_variants', hasVariants ? '1' : '0')
-    await createProduct(formData)
-    router.push('/dashboard/products')
-    router.refresh()
+    setIsSubmitting(true)
+    try {
+      formData.delete('files')
+      previews.forEach(p => { if (p.file) formData.append('files', p.file) })
+      variants.forEach((v, idx) => {
+        if (v.imageFile) formData.append(`variant_image_${idx}`, v.imageFile)
+      })
+      const variantsData = variants.map(({ imageFile, imageUrl, ...rest }) => ({
+        ...rest,
+        price: rest.price.replace(/\./g, ''),
+        stock: rest.stock,
+        imageUrl: ''
+      }))
+      formData.set('variants_json', JSON.stringify(variantsData))
+      formData.set('has_variants', hasVariants ? '1' : '0')
+      await createProduct(formData)
+      router.push('/dashboard/products')
+      router.refresh()
+    } catch (e) {
+      setIsSubmitting(false)
+    }
   }
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-4">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/products" className="text-xs text-zinc-400 hover:text-zinc-700 border border-zinc-200 px-3 py-1.5 rounded-lg transition-colors">
@@ -101,14 +103,14 @@ export default function NewProductPage() {
 
       <form action={formAction} className="space-y-4">
 
-      <ImageSortableGallery previews={previews} setPreviews={setPreviews} />
+        <ImageSortableGallery previews={previews} setPreviews={setPreviews} />
 
         {/* Informasi Produk */}
         <div className="bg-white rounded-xl border border-zinc-100 p-5 space-y-4">
           <h2 className="text-sm font-medium text-zinc-700">Informasi Produk</h2>
 
           <div className="space-y-1.5">
-            <Label htmlFor="name" className="text-xs font-medium text-zinc-600">Nama Produk</Label>
+            <Label htmlFor="name" className="text-xs font-medium text-zinc-600">Nama Produk <span className="text-red-500">*</span></Label>
             <input id="name" name="name" required placeholder="Contoh: Sepatu Sneakers Hitam"
               className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors" />
           </div>
@@ -138,7 +140,7 @@ export default function NewProductPage() {
           {!hasVariants && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="price" className="text-xs font-medium text-zinc-600">Harga (Rp)</Label>
+                <Label htmlFor="price" className="text-xs font-medium text-zinc-600">Harga <span className="text-red-500">*</span></Label>
                 <div className="flex items-center h-9 border border-zinc-200 rounded-lg overflow-hidden focus-within:border-zinc-400 transition-colors">
                   <span className="px-3 text-xs text-zinc-400 bg-zinc-50 border-r border-zinc-200 h-full flex items-center">Rp</span>
                   <input id="price" required type="text" placeholder="150.000" value={basePrice}
@@ -148,10 +150,10 @@ export default function NewProductPage() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="discount_input" className="text-xs font-medium text-zinc-600">Diskon <span className="text-zinc-400 font-normal">(Opsional)</span></Label>
+                <Label htmlFor="discount_input" className="text-xs font-medium text-zinc-600">Harga Coret / Diskon <span className="text-zinc-400 font-normal">(Opsional)</span></Label>
                 <div className="flex items-center h-9 border border-zinc-200 rounded-lg overflow-hidden focus-within:border-zinc-400 transition-colors">
                   <select className="px-2 text-xs text-zinc-600 bg-zinc-50 border-r border-zinc-200 h-full outline-none" value={discountType}
-                    onChange={e => setDiscountType(e.target.value as 'FIX' | 'PERCENT')}>
+                    onChange={e => { setDiscountType(e.target.value as 'FIX' | 'PERCENT'); setDiscountInput('') }}>
                     <option value="FIX">Rp</option>
                     <option value="PERCENT">%</option>
                   </select>
@@ -163,8 +165,13 @@ export default function NewProductPage() {
                     className="flex-1 px-3 text-sm outline-none bg-transparent" />
                   <input type="hidden" name="discount_price" value={finalDiscountPrice} />
                 </div>
-                {discountType === 'PERCENT' && discountInput && (
-                  <p className="text-[10px] text-zinc-500">Harga akhir: Rp {parseInt(finalDiscountPrice || '0').toLocaleString('id-ID')}</p>
+                {discountInput && (
+                  <p className="text-[10px] text-emerald-600 font-medium">
+                    {discountType === 'PERCENT'
+                      ? `Harga akhir: Rp ${parseInt(finalDiscountPrice || '0').toLocaleString('id-ID')} (hemat ${discountInput}%)`
+                      : `Harga coret tampil di toko: Rp ${(parseInt(basePrice.replace(/\./g,''))||0).toLocaleString('id-ID')} → Rp ${(parseInt(discountInput.replace(/\./g,''))||0).toLocaleString('id-ID')}`
+                    }
+                  </p>
                 )}
               </div>
             </div>
@@ -174,7 +181,7 @@ export default function NewProductPage() {
           {!hasVariants && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="stock" className="text-xs font-medium text-zinc-600">Stok Awal</Label>
+                <Label htmlFor="stock" className="text-xs font-medium text-zinc-600">Stok Awal <span className="text-red-500">*</span></Label>
                 <input id="stock" name="stock" type="number" required min="0" defaultValue="0"
                   className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors" />
               </div>
@@ -252,8 +259,7 @@ export default function NewProductPage() {
 
               <button type="button" onClick={addVariant}
                 className="w-full border-2 border-dashed border-zinc-200 rounded-xl py-3 text-sm text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 transition-all flex items-center justify-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                Tambah Varian
+                + Tambah Varian
               </button>
 
               {variants.length === 0 && (
@@ -266,12 +272,28 @@ export default function NewProductPage() {
         {/* Submit */}
         <div className="flex items-center justify-between">
           <Link href="/dashboard/products" className="text-sm text-zinc-400 hover:text-zinc-700 transition-colors">Batal</Link>
-          <button type="submit" className="bg-zinc-900 text-white text-sm font-medium px-6 py-2.5 rounded-lg hover:bg-zinc-700 transition-colors">
-            Simpan Produk →
+          <button type="submit" disabled={isSubmitting}
+            className="bg-zinc-900 text-white text-sm font-medium px-6 py-2.5 rounded-lg hover:bg-zinc-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2">
+            {isSubmitting ? (
+              <><span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> Menyimpan...</>
+            ) : 'Simpan Produk →'}
           </button>
         </div>
 
       </form>
     </div>
+  )
+}
+
+// Outer page wraps inner form in Suspense (required by useSearchParams in Next.js)
+export default function NewProductPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[300px]">
+        <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-700 rounded-full animate-spin"></div>
+      </div>
+    }>
+      <NewProductForm />
+    </Suspense>
   )
 }
