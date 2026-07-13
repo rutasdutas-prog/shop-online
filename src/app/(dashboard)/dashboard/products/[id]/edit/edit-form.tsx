@@ -67,6 +67,15 @@ export default function EditProductForm({ product, error }: { product: any, erro
 
   return (
     <form action={formAction} className="space-y-4">
+      {/* Full-screen loading overlay */}
+      {isSubmitting && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm">
+          <div className="w-14 h-14 border-4 border-zinc-200 border-t-zinc-900 rounded-full animate-spin mb-5"></div>
+          <p className="text-zinc-900 font-semibold text-lg">Menyimpan Produk...</p>
+          <p className="text-zinc-500 text-sm mt-1.5">Mohon tunggu, sedang mengunggah foto dan data produk.</p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
