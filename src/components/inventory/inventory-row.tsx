@@ -36,7 +36,12 @@ export function InventoryRow({ item }: { item: any }) {
       </td>
       <td className="px-5 py-3 text-zinc-500 text-xs">{item.sku || '—'}</td>
       <td className="px-5 py-3 text-center">
-        {isEditing ? (
+        {item.has_variants ? (
+          <div className="flex items-center justify-center gap-3 group">
+            <span className="font-semibold text-zinc-900">{item.stock_level}</span>
+            <span className="text-[10px] text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded" title="Stok varian, edit di menu Produk">Multi Varian</span>
+          </div>
+        ) : isEditing ? (
           <form onSubmit={handleSave} className="flex items-center justify-center gap-2">
             <input 
               type="number" 

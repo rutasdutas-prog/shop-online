@@ -19,27 +19,30 @@ export default async function InventoryPage() {
   const lang = await getLanguage()
   const dict = dictionaries[lang]
 
-  // Ambil produk + inventory
+  // Ambil produk dengan stok dan variannya
   const { data: products } = await supabase
     .from('products')
-    .select('id, name, sku, images')
+    .select('id, name, sku, images, stock, variants')
     .eq('store_id', store.id)
     .order('created_at', { ascending: false })
 
-  const { data: inventoryData } = await supabase
-    .from('inventory')
-    .select('*, product_id')
-    .eq('store_id', store.id)
-
-  const inventoryMap = new Map((inventoryData || []).map(i => [i.product_id, i]))
-
   const items = (products || []).map(p => {
-    const inv = inventoryMap.get(p.id)
+    const productVariants: any[] = Array.isArray(p.variants) && p.variants.length > 0 ? p.variants : []
+    const hasVariants = productVariants.length > 0
+    
+    // Jika ada varian, jumlahkan stok semua varian. Jika tidak, gunakan stok produk utama.
+    const totalStock = hasVariants 
+      ? productVariants.reduce((s: number, v: any) => s + (parseInt(v.stock) || 0), 0) 
+      : (p.stock || 0)
+      
+    const threshold = 5 // Ambang batas stok rendah
+    
     return {
       ...p,
-      stock_level: inv?.stock_level ?? 0,
-      low_stock_threshold: inv?.low_stock_threshold ?? 5,
-      is_low: inv ? inv.stock_level <= inv.low_stock_threshold : true,
+      has_variants: hasVariants,
+      stock_level: totalStock,
+      low_stock_threshold: threshold,
+      is_low: totalStock <= threshold,
     }
   })
 
