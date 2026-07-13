@@ -23,9 +23,15 @@ export default async function EditProductPage(props: { params: Promise<{ id: str
 
   if (!product) notFound()
 
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('id, name, slug')
+    .eq('store_id', store.id)
+    .order('name')
+
   return (
     <div className="max-w-2xl space-y-5">
-      <EditProductForm product={product} error={searchParams?.error} />
+      <EditProductForm product={product} categories={categories || []} error={searchParams?.error} />
     </div>
   )
 }

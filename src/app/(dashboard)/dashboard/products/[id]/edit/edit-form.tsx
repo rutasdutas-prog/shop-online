@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import ImageSortableGallery, { PreviewItem } from '@/components/storefront/image-sortable-gallery'
 
-export default function EditProductForm({ product, error }: { product: any, error?: string }) {
+export default function EditProductForm({ product, categories = [], error }: { product: any, categories?: { id: string; name: string; slug: string }[], error?: string }) {
   const [previews, setPreviews] = useState<PreviewItem[]>(
     (product.images || []).map((url: string, i: number) => ({ 
       id: `existing-${i}`,
@@ -21,6 +21,7 @@ export default function EditProductForm({ product, error }: { product: any, erro
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
   const hasVariants = Boolean(product.variants?.length)
+  const [categoryId, setCategoryId] = useState(product.category_id || '')
   
   const [basePrice, setBasePrice] = useState(product.price?.toString() || '')
   const [discountType, setDiscountType] = useState<'FIX' | 'PERCENT'>('FIX')
@@ -137,6 +138,22 @@ export default function EditProductForm({ product, error }: { product: any, erro
               <option value="DRAFT">Draft / Nonaktif</option>
             </select>
           </div>
+        </div>
+
+        {/* Kategori */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-zinc-600">Kategori</label>
+          <select
+            name="category_id"
+            value={categoryId}
+            onChange={e => setCategoryId(e.target.value)}
+            className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors bg-white"
+          >
+            <option value="">— Tanpa Kategori —</option>
+            {categories.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
         </div>
 
         {/* Harga & Diskon — hidden when has variants */}

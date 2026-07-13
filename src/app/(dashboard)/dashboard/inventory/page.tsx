@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ExportButtons } from '@/components/export-buttons'
+import { InventoryExportButtons } from '@/components/inventory/inventory-export-buttons'
 import { InventoryRow } from '@/components/inventory/inventory-row'
 import { getLanguage } from '@/actions/language.actions'
 import { dictionaries } from '@/lib/i18n/dictionaries'
@@ -55,20 +55,16 @@ export default async function InventoryPage() {
           <h1 className="text-xl font-semibold text-zinc-900">{dict.inventory.title}</h1>
           <p className="text-sm text-zinc-400 mt-0.5">{dict.inventory.subtitle}</p>
         </div>
-        <ExportButtons
-          filename="Inventaris_TokoKita"
-          data={items.map(i => ({
-            Produk: i.name,
-            SKU: i.sku || '-',
-            Stok: i.stock_level,
-            Status: i.is_low ? 'Rendah' : 'Aman'
+        <InventoryExportButtons
+          items={items.map(i => ({
+            id: i.id,
+            name: i.name,
+            sku: i.sku,
+            images: i.images,
+            stock_level: i.stock_level,
+            is_low: i.is_low,
           }))}
-          columns={[
-            { header: 'Produk', dataKey: 'Produk' },
-            { header: 'SKU', dataKey: 'SKU' },
-            { header: 'Stok', dataKey: 'Stok' },
-            { header: 'Status', dataKey: 'Status' }
-          ]}
+          filename="Inventaris_Produk"
         />
       </div>
 
