@@ -306,34 +306,12 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
               <button disabled className="w-full text-zinc-400 bg-zinc-100 text-sm md:text-base font-semibold py-3.5 rounded-xl cursor-not-allowed">
                 {lang === 'id' ? 'Stok Habis' : 'Out of Stock'}
               </button>
-            ) : store.whatsapp ? (
-              <a
-                href={`https://wa.me/62${store.whatsapp}?text=${encodeURIComponent(
-                  hasVariants && activeVariant
-                    ? `Halo, saya tertarik dengan produk: *${product.name}*\nVarian: *${activeVariant.name}*\nHarga: Rp ${displayPrice.toLocaleString('id-ID')}`
-                    : `Halo, saya tertarik dengan produk: *${product.name}* (Rp ${displayPrice.toLocaleString('id-ID')})`
-                )}`}
-                target="_blank"
-                onClick={e => {
-                  if (hasVariants && selectedVariant === null) {
-                    e.preventDefault()
-                    alert(lang === 'id' ? 'Pilih varian terlebih dahulu!' : 'Please select a variant first!')
-                  }
-                }}
-                className="w-full flex items-center justify-center gap-2 text-white text-sm md:text-base font-semibold py-3.5 rounded-xl transition-all active:scale-95 shadow-lg shadow-black/5 hover:opacity-90"
-                style={{ backgroundColor: hasVariants && selectedVariant === null ? '#71717a' : themeColor }}
-              >
-                {hasVariants && selectedVariant === null
-                  ? (lang === 'id' ? 'Pilih Varian Dulu' : 'Select a Variant First')
-                  : (lang === 'id' ? 'Pesan via WhatsApp' : 'Order via WhatsApp')
-                }
-              </a>
             ) : (
               <button
                 type="button"
                 onClick={handleAddToCart}
                 disabled={isOutOfStock}
-                className={`w-full flex items-center justify-center gap-2 text-white text-sm md:text-base font-semibold py-3.5 rounded-xl transition-all active:scale-95 shadow-lg shadow-black/5 hover:opacity-90 ${isOutOfStock ? 'bg-zinc-300 cursor-not-allowed' : ''}`}
+                className={`w-full flex items-center justify-center gap-2 text-white text-sm md:text-base font-semibold py-3.5 rounded-xl transition-all active:scale-95 shadow-lg shadow-black/5 hover:opacity-90 ${isOutOfStock ? 'bg-white/10 text-white/30 cursor-not-allowed' : ''}`}
                 style={!isOutOfStock ? { backgroundColor: hasVariants && selectedVariant === null ? '#71717a' : themeColor } : {}}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>

@@ -135,15 +135,6 @@ export default function ProductCard({ product, store, themeColor, lang, dict, co
                 <button disabled className="w-full text-white/30 bg-white/5 text-[11px] md:text-sm font-semibold py-2 md:py-2.5 rounded-xl cursor-not-allowed border border-white/10">
                   {dict.storefront.outOfStock}
                 </button>
-              ) : store.whatsapp ? (
-                <a
-                  href={`https://wa.me/62${store.whatsapp}?text=${encodeURIComponent(`Halo, saya tertarik dengan produk: *${product.name}* (Rp ${displayPrice.toLocaleString('id-ID')})`)}`}
-                  target="_blank"
-                  className="w-full flex items-center justify-center gap-1.5 text-white text-[11px] md:text-sm font-semibold py-2 md:py-2.5 rounded-xl transition-all active:scale-95 shadow"
-                  style={{ backgroundColor: themeColor }}
-                >
-                  {lang === 'id' ? 'Pesan' : 'Order'}
-                </a>
               ) : (
                 <AddToCartButton 
                   productId={product.id}
