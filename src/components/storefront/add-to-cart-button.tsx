@@ -3,18 +3,29 @@
 import React from 'react'
 
 interface AddToCartButtonProps {
+  productId: string
   productName: string
+  price: number
+  image?: string
   className?: string
   style?: React.CSSProperties
   children: React.ReactNode
   title?: string
 }
 
-export function AddToCartButton({ productName, className, style, children, title }: AddToCartButtonProps) {
+export function AddToCartButton({ productId, productName, price, image, className, style, children, title }: AddToCartButtonProps) {
   return (
     <button 
       onClick={() => {
-        window.dispatchEvent(new CustomEvent('ai-cart-add', { detail: { productName } }))
+        window.dispatchEvent(new CustomEvent('cart-direct-add', {
+          detail: {
+            productId,
+            productName,
+            price,
+            image,
+            quantity: 1
+          }
+        }))
       }}
       className={className}
       style={style}

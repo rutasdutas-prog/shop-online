@@ -72,7 +72,7 @@ export default function ProductCard({ product, store, themeColor, lang, dict, co
 
         {/* Info */}
         <div className="p-2.5 md:p-4 flex-1 flex flex-col">
-          <h3 className="text-xs md:text-sm font-semibold text-zinc-800 line-clamp-2 leading-snug mb-1.5 md:mb-3 group-hover:text-[var(--theme-color)] transition-colors" style={{ '--theme-color': themeColor } as any}>{product.name}</h3>
+          <h3 className="text-xs md:text-sm font-semibold text-zinc-800 line-clamp-2 leading-snug mb-1.5 md:mb-3 min-h-[36px] md:min-h-[44px] group-hover:text-[var(--theme-color)] transition-colors" style={{ '--theme-color': themeColor } as any}>{product.name}</h3>
           
           <div className="mt-auto">
             {/* Price */}
@@ -115,7 +115,10 @@ export default function ProductCard({ product, store, themeColor, lang, dict, co
                 </a>
               ) : (
                 <AddToCartButton 
+                  productId={product.id}
                   productName={product.name}
+                  price={displayPrice}
+                  image={product.images?.[0]}
                   className="w-full flex items-center justify-center gap-1.5 text-white text-[11px] md:text-sm font-semibold py-2 md:py-2.5 rounded-lg transition-all active:scale-95 shadow-sm"
                   style={{ backgroundColor: themeColor }}
                 >

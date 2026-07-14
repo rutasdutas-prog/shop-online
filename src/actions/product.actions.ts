@@ -79,6 +79,7 @@ export async function createProduct(formData: FormData) {
         variants.push({
           name: rawVariants[idx].name,
           price: parseFloat(rawVariants[idx].price) || 0,
+          discount_price: parseFloat(rawVariants[idx].discount_price) || null,
           stock: parseInt(rawVariants[idx].stock) || 0,
           imageUrl: vImageUrl,
         })
@@ -189,6 +190,7 @@ export async function updateProduct(formData: FormData) {
         variants.push({
           name: rawVariants[idx].name,
           price: parseFloat(rawVariants[idx].price) || 0,
+          discount_price: parseFloat(rawVariants[idx].discount_price) || null,
           stock: parseInt(rawVariants[idx].stock) || 0,
           imageUrl: vImageUrl,
         })
