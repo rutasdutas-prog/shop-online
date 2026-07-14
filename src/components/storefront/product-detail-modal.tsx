@@ -247,27 +247,6 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
                     )
                   })}
                 </div>
-
-                {/* Per-variant stock table */}
-                <div className="mt-4 bg-zinc-50 border border-zinc-100 rounded-xl p-3 space-y-1.5">
-                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">Stok per Varian</p>
-                  {productVariants.map((v, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-600 font-medium">{v.name}</span>
-                      <div className="flex items-center gap-2">
-                        {v.discount_price && Number(v.discount_price) > 0 && Number(v.discount_price) < Number(v.price) && (
-                          <span className="text-zinc-400 line-through">Rp {Number(v.price).toLocaleString('id-ID')}</span>
-                        )}
-                        <span className="font-semibold" style={{ color: themeColor }}>
-                          Rp {(v.discount_price && Number(v.discount_price) > 0 && Number(v.discount_price) < Number(v.price) ? Number(v.discount_price) : Number(v.price)).toLocaleString('id-ID')}
-                        </span>
-                        <span className={`font-bold tabular-nums ${v.stock <= 0 ? 'text-red-500' : v.stock <= 5 ? 'text-orange-500' : 'text-zinc-700'}`}>
-                          Stok: {v.stock}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
 

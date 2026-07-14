@@ -63,6 +63,7 @@ export default async function InventoryPage() {
             images: i.images,
             stock_level: i.stock_level,
             is_low: i.is_low,
+            variants: i.variants,
           }))}
           filename="Inventaris_Produk"
         />

@@ -12,6 +12,7 @@ interface InventoryItem {
   images: string[] | null
   stock_level: number
   is_low: boolean
+  variants?: any[]
 }
 
 interface InventoryExportButtonsProps {
@@ -54,15 +55,40 @@ export function InventoryExportButtons({ items, filename = 'Inventaris' }: Inven
       doc.setTextColor(113, 113, 122)
       doc.text(`Diekspor: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`, 14, 22)
 
+      // Create flattened list
+      const flattenedItems: { id: string; name: string; sku: string; stock: number; isLow: boolean; image: string | null }[] = []
+      items.forEach(item => {
+        if (item.variants && item.variants.length > 0) {
+          item.variants.forEach((v, idx) => {
+            flattenedItems.push({
+              id: `${item.id}-v${idx}`,
+              name: `${item.name} - ${v.name}`,
+              sku: item.sku || '—',
+              stock: Number(v.stock) || 0,
+              isLow: Number(v.stock) <= 5,
+              image: v.imageUrl?.startsWith('http') ? v.imageUrl : (item.images?.[0] || null)
+            })
+          })
+        } else {
+          flattenedItems.push({
+            id: item.id,
+            name: item.name,
+            sku: item.sku || '—',
+            stock: item.stock_level,
+            isLow: item.is_low,
+            image: item.images?.[0] || null
+          })
+        }
+      })
+
       // Pre-fetch all images
       const imageMap: Record<string, string | null> = {}
       await Promise.all(
-        items.map(async (item) => {
-          const imgUrl = item.images?.[0]
-          if (imgUrl) {
-            imageMap[item.id] = await imageUrlToBase64(imgUrl)
+        flattenedItems.map(async (fItem) => {
+          if (fItem.image) {
+            imageMap[fItem.id] = await imageUrlToBase64(fItem.image)
           } else {
-            imageMap[item.id] = null
+            imageMap[fItem.id] = null
           }
         })
       )
@@ -70,7 +96,7 @@ export function InventoryExportButtons({ items, filename = 'Inventaris' }: Inven
       const ROW_HEIGHT = 18 // mm per row
       const IMG_SIZE = 13   // mm image size
       const COL_WIDTHS = [18, 80, 30, 20, 22] // Foto | Nama | SKU | Stok | Status
-      const HEADERS = ['Foto', 'Nama Produk', 'SKU', 'Stok', 'Status']
+      const HEADERS = ['Foto', 'Nama Produk / Varian', 'SKU', 'Stok', 'Status']
       const MARGIN_LEFT = 14
       const PAGE_WIDTH = 210
       const COL_STARTS = COL_WIDTHS.reduce<number[]>((acc, w, i) => {
@@ -93,8 +119,8 @@ export function InventoryExportButtons({ items, filename = 'Inventaris' }: Inven
 
       doc.setFont('helvetica', 'normal')
 
-      for (let idx = 0; idx < items.length; idx++) {
-        const item = items[idx]
+      for (let idx = 0; idx < flattenedItems.length; idx++) {
+        const item = flattenedItems[idx]
 
         // Check page break
         if (y + ROW_HEIGHT > 280) {
@@ -144,19 +170,19 @@ export function InventoryExportButtons({ items, filename = 'Inventaris' }: Inven
         // SKU
         doc.setFontSize(7)
         doc.setTextColor(113, 113, 122)
-        doc.text(item.sku || '—', COL_STARTS[2] + 2, y + ROW_HEIGHT / 2 + 2)
+        doc.text(item.sku, COL_STARTS[2] + 2, y + ROW_HEIGHT / 2 + 2)
 
         // Stock
         doc.setFontSize(9)
         doc.setFont('helvetica', 'bold')
         doc.setTextColor(24, 24, 27)
-        doc.text(String(item.stock_level), COL_STARTS[3] + 2, y + ROW_HEIGHT / 2 + 2)
+        doc.text(String(item.stock), COL_STARTS[3] + 2, y + ROW_HEIGHT / 2 + 2)
         doc.setFont('helvetica', 'normal')
 
         // Status badge
-        const statusText = item.is_low ? 'Rendah' : 'Aman'
-        const statusColor = item.is_low ? [254, 226, 226] : [220, 252, 231]
-        const statusTextColor = item.is_low ? [185, 28, 28] : [21, 128, 61]
+        const statusText = item.isLow ? 'Rendah' : 'Aman'
+        const statusColor = item.isLow ? [254, 226, 226] : [220, 252, 231]
+        const statusTextColor = item.isLow ? [185, 28, 28] : [21, 128, 61]
         doc.setFillColor(statusColor[0], statusColor[1], statusColor[2])
         doc.roundedRect(COL_STARTS[4] + 1, y + ROW_HEIGHT / 2 - 4, 18, 7, 2, 2, 'F')
         doc.setFontSize(7)
@@ -183,14 +209,29 @@ export function InventoryExportButtons({ items, filename = 'Inventaris' }: Inven
   const handleExportExcel = async () => {
     setXlsLoading(true)
     try {
-      // Prepare data rows
-      const rows = items.map(item => ({
-        'URL Foto': item.images?.[0] || '',
-        'Nama Produk': item.name,
-        'SKU': item.sku || '-',
-        'Stok': item.stock_level,
-        'Status': item.is_low ? 'Rendah ⚠️' : 'Aman ✅',
-      }))
+      // Flatten items for Excel as well
+      const rows: any[] = []
+      items.forEach(item => {
+        if (item.variants && item.variants.length > 0) {
+          item.variants.forEach((v) => {
+            rows.push({
+              'URL Foto': v.imageUrl?.startsWith('http') ? v.imageUrl : (item.images?.[0] || ''),
+              'Nama Produk / Varian': `${item.name} - ${v.name}`,
+              'SKU': item.sku || '-',
+              'Stok': Number(v.stock) || 0,
+              'Status': Number(v.stock) <= 5 ? 'Rendah ⚠️' : 'Aman ✅',
+            })
+          })
+        } else {
+          rows.push({
+            'URL Foto': item.images?.[0] || '',
+            'Nama Produk / Varian': item.name,
+            'SKU': item.sku || '-',
+            'Stok': item.stock_level,
+            'Status': item.is_low ? 'Rendah ⚠️' : 'Aman ✅',
+          })
+        }
+      })
 
       const ws = XLSX.utils.json_to_sheet(rows)
 

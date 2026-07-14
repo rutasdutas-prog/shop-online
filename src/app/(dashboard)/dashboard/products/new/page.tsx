@@ -11,6 +11,7 @@ interface Variant {
   name: string
   price: string
   discount_price: string
+  discount_type: 'FIX' | 'PERCENT'
   stock: string
   imageUrl: string
   imageFile?: File
@@ -45,7 +46,7 @@ function NewProductForm() {
   })()
 
   const addVariant = () => {
-    setVariants(v => [...v, { name: '', price: '', discount_price: '', stock: '0', imageUrl: '' }])
+    setVariants(v => [...v, { name: '', price: '', discount_price: '', discount_type: 'FIX', stock: '0', imageUrl: '' }])
   }
 
   const removeVariant = (idx: number) => {
@@ -70,13 +71,27 @@ function NewProductForm() {
     variants.forEach((v, idx) => {
       if (v.imageFile) formData.append(`variant_image_${idx}`, v.imageFile)
     })
-    const variantsData = variants.map(({ imageFile, imageUrl, ...rest }) => ({
-      ...rest,
-      price: rest.price.replace(/\./g, ''),
-      discount_price: rest.discount_price ? rest.discount_price.replace(/\./g, '') : '',
-      stock: rest.stock,
-      imageUrl: ''
-    }))
+    const variantsData = variants.map(({ imageFile, imageUrl, discount_type, ...rest }) => {
+      let finalDisc = ''
+      if (rest.discount_price) {
+        if (discount_type === 'FIX') {
+          finalDisc = rest.discount_price.replace(/\./g, '')
+        } else {
+          const bPrice = parseFloat(rest.price.replace(/\./g, '') || '0')
+          const perc = parseFloat(rest.discount_price)
+          if (!isNaN(bPrice) && !isNaN(perc)) {
+            finalDisc = Math.floor(bPrice - (bPrice * (perc / 100))).toString()
+          }
+        }
+      }
+      return {
+        ...rest,
+        price: rest.price.replace(/\./g, ''),
+        discount_price: finalDisc,
+        stock: rest.stock,
+        imageUrl: ''
+      }
+    })
     formData.set('variants_json', JSON.stringify(variantsData))
     formData.set('has_variants', hasVariants ? '1' : '0')
     
@@ -273,14 +288,37 @@ function NewProductForm() {
                           <div className="space-y-1">
                             <label className="text-[10px] text-zinc-400 font-medium">Harga Coret <span className="text-zinc-300">(Opsional)</span></label>
                             <div className="flex items-center h-9 border border-zinc-200 rounded-lg overflow-hidden focus-within:border-zinc-400">
-                              <span className="px-2 text-xs text-zinc-400 bg-zinc-50 border-r border-zinc-200 h-full flex items-center">Rp</span>
-                              <input type="text" placeholder="200.000" value={v.discount_price || ''}
-                                onChange={e => { const val = e.target.value.replace(/\D/g, ''); updateVariant(idx, 'discount_price', val ? parseInt(val).toLocaleString('id-ID') : '') }}
+                              <select className="px-2 text-xs text-zinc-600 bg-zinc-50 border-r border-zinc-200 h-full outline-none" value={v.discount_type || 'FIX'}
+                                onChange={e => updateVariant(idx, 'discount_type', e.target.value as 'FIX' | 'PERCENT')}>
+                                <option value="FIX">Rp</option>
+                                <option value="PERCENT">%</option>
+                              </select>
+                              <input type="text" placeholder={v.discount_type === 'PERCENT' ? "10" : "200.000"} value={v.discount_price || ''}
+                                onChange={e => {
+                                  if (v.discount_type === 'FIX' || !v.discount_type) {
+                                    const val = e.target.value.replace(/\D/g, '')
+                                    updateVariant(idx, 'discount_price', val ? parseInt(val).toLocaleString('id-ID') : '')
+                                  } else {
+                                    updateVariant(idx, 'discount_price', e.target.value.replace(/[^0-9.]/g, ''))
+                                  }
+                                }}
                                 className="flex-1 px-2 text-sm outline-none bg-transparent" />
                             </div>
-                            {v.discount_price && v.price && Number(v.discount_price.replace(/\./g,'')) > Number(v.price.replace(/\./g,'')) && (
-                              <p className="text-[10px] text-emerald-600">Coret: Rp {v.discount_price} → Rp {v.price}</p>
-                            )}
+                            {(() => {
+                              if (!v.discount_price || !v.price) return null
+                              let coretStr = v.discount_price
+                              if (v.discount_type === 'FIX' && Number(v.discount_price.replace(/\./g,'')) > Number(v.price.replace(/\./g,''))) {
+                                return <p className="text-[10px] text-emerald-600">Coret: Rp {v.discount_price} → Rp {v.price}</p>
+                              } else if (v.discount_type === 'PERCENT') {
+                                const bPrice = parseFloat(v.price.replace(/\./g, '') || '0')
+                                const perc = parseFloat(v.discount_price)
+                                if (!isNaN(bPrice) && !isNaN(perc)) {
+                                  const finalDisc = Math.floor(bPrice - (bPrice * (perc / 100)))
+                                  return <p className="text-[10px] text-emerald-600">Akhir: Rp {finalDisc.toLocaleString('id-ID')}</p>
+                                }
+                              }
+                              return null
+                            })()}
                           </div>
                         </div>
                         {/* Stok */}
