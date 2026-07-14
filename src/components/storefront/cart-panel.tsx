@@ -276,8 +276,18 @@ export function CartPanel({ storeId, themeColor, lang, whatsapp }: CartPanelProp
                 <input
                   type="tel"
                   value={customerWa}
-                  onChange={(e) => setCustomerWa(e.target.value)}
-                  placeholder={lang === 'id' ? 'Contoh: 0812...' : 'Example: 0812...'}
+                  onChange={(e) => {
+                    // Format as 4-4-4 digit groups
+                    let digits = e.target.value.replace(/\D/g, '')
+                    let formatted = digits
+                    if (digits.length > 4 && digits.length <= 8) {
+                      formatted = `${digits.slice(0, 4)}-${digits.slice(4)}`
+                    } else if (digits.length > 8) {
+                      formatted = `${digits.slice(0, 4)}-${digits.slice(4, 8)}-${digits.slice(8, 13)}`
+                    }
+                    setCustomerWa(formatted)
+                  }}
+                  placeholder={lang === 'id' ? 'Contoh: 0812-3456-7890' : 'Example: 0812-3456-7890'}
                   className="w-full px-3 py-2 text-sm bg-zinc-50 border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 focus:bg-white transition-colors"
                 />
               </div>

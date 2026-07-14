@@ -33,7 +33,13 @@ export default function ProductCard({ product, store, themeColor, lang, dict, co
   const price = product.price || 0
   const discount = product.discount_price || 0
   const hasDiscount = !hasVariants && discount > 0 && discount < price
-  const minVariantPrice = hasVariants ? Math.min(...productVariants.map((v: any) => v.discount_price ? Number(v.discount_price) : Number(v.price))) : 0
+  const minVariantPrice = hasVariants
+    ? Math.min(...productVariants.map((v: any) => v.discount_price && Number(v.discount_price) > 0 && Number(v.discount_price) < Number(v.price) ? Number(v.discount_price) : Number(v.price)))
+    : 0
+  const maxVariantPrice = hasVariants
+    ? Math.max(...productVariants.map((v: any) => Number(v.price)))
+    : 0
+  const hasVariantRange = hasVariants && maxVariantPrice > minVariantPrice
   const displayPrice = hasVariants ? minVariantPrice : (hasDiscount ? discount : price)
   const percentOff = hasDiscount ? Math.round((1 - discount / price) * 100) : 0
   const stock = hasVariants ? productVariants.reduce((s: number, v: any) => s + (v.stock || 0), 0) : (product.stock ?? null)
@@ -124,7 +130,12 @@ export default function ProductCard({ product, store, themeColor, lang, dict, co
                 </span>
               )}
               <span className="text-sm md:text-base font-extrabold tracking-tight" style={{ color: isOutOfStock ? 'rgba(255,255,255,0.3)' : themeColor }}>
-                {hasVariants ? 'Mulai ' : ''}Rp {displayPrice.toLocaleString('id-ID')}
+                {hasVariants
+                  ? hasVariantRange
+                    ? `Rp ${minVariantPrice.toLocaleString('id-ID')} – Rp ${maxVariantPrice.toLocaleString('id-ID')}`
+                    : `Rp ${minVariantPrice.toLocaleString('id-ID')}`
+                  : `Rp ${displayPrice.toLocaleString('id-ID')}`
+                }
               </span>
             </div>
             

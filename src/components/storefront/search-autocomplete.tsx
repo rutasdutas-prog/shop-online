@@ -82,10 +82,22 @@ export function SearchAutocomplete({ storeId, themeColor }: { storeId: string, t
           <div className="max-h-[60vh] overflow-y-auto">
             {results.products.map(product => {
               const image = Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : null
+              const variants: any[] = Array.isArray(product.variants) && product.variants.length > 0 ? product.variants : []
+              const hasVariants = variants.length > 0
               const price = product.price || 0
               const discount = product.discount_price || 0
-              const hasDiscount = discount > 0 && discount < price
-              const displayPrice = hasDiscount ? discount : price
+              const hasDiscount = !hasVariants && discount > 0 && discount < price
+              
+              // Variant price range
+              const minVariantPrice = hasVariants
+                ? Math.min(...variants.map((v: any) => v.discount_price && Number(v.discount_price) > 0 && Number(v.discount_price) < Number(v.price) ? Number(v.discount_price) : Number(v.price)))
+                : 0
+              const maxVariantPrice = hasVariants
+                ? Math.max(...variants.map((v: any) => Number(v.price)))
+                : 0
+              const hasVariantRange = hasVariants && maxVariantPrice > minVariantPrice
+              const displayPrice = hasVariants ? minVariantPrice : (hasDiscount ? discount : price)
+              const originalPrice = hasDiscount ? price : 0
               
               // Highlighting matches
               const regex = new RegExp(`(${query})`, 'gi')
@@ -128,11 +140,16 @@ export function SearchAutocomplete({ storeId, themeColor }: { storeId: string, t
                   <div className="text-right shrink-0">
                     {hasDiscount && (
                       <div className="text-[10px] line-through mb-0.5" style={{ color: 'rgba(255,255,255,0.30)' }}>
-                        Rp {price.toLocaleString('id-ID')}
+                        Rp {originalPrice.toLocaleString('id-ID')}
                       </div>
                     )}
                     <div className="text-sm font-bold" style={{ color: themeColor }}>
-                      Rp {displayPrice.toLocaleString('id-ID')}
+                      {hasVariants
+                        ? hasVariantRange
+                          ? `Rp ${minVariantPrice.toLocaleString('id-ID')} \u2013 Rp ${maxVariantPrice.toLocaleString('id-ID')}`
+                          : `Rp ${minVariantPrice.toLocaleString('id-ID')}`
+                        : `Rp ${displayPrice.toLocaleString('id-ID')}`
+                      }
                     </div>
                   </div>
                 </div>

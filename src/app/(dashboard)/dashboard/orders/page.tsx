@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { OrderPdfButton } from '@/components/orders/order-pdf-button'
+
 import { redirect } from 'next/navigation'
 import { getLanguage } from '@/actions/language.actions'
 import { dictionaries } from '@/lib/i18n/dictionaries'
@@ -21,7 +22,7 @@ export default async function OrdersPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: store } = await supabase.from('stores').select('id').eq('owner_id', user.id).single()
+  const { data: store } = await supabase.from('stores').select('id, name').eq('owner_id', user.id).single()
   if (!store) redirect('/dashboard/setup')
 
   const lang = await getLanguage()
@@ -52,7 +53,8 @@ export default async function OrdersPage() {
                   <th className="px-4 py-3">{dict.orders.tableTotal}</th>
                   <th className="px-4 py-3">{dict.orders.tableStatus}</th>
                   <th className="px-4 py-3">{dict.orders.tableDate}</th>
-                  <th className="px-4 py-3">Aksi</th>
+                  <th className="px-4 py-3">PDF</th>
+<th className="px-4 py-3">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -70,6 +72,9 @@ export default async function OrdersPage() {
                       </td>
                       <td className="px-4 py-3 text-zinc-500">{new Date(order.created_at).toLocaleDateString('id-ID')}</td>
                       <td className="px-4 py-3">
+                        <OrderPdfButton order={order as any} storeName={store?.name || ''} />
+                      </td>
+                      <td className="px-4 py-3">
                         <Link
                           href={`/dashboard/orders/${order.id}`}
                           className="flex items-center gap-1.5 text-xs text-zinc-600 hover:text-zinc-900 border border-zinc-200 px-2.5 py-1.5 rounded-lg transition-colors w-fit"
@@ -78,7 +83,7 @@ export default async function OrdersPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
-                          Detail & PDF
+                          Detail
                         </Link>
                       </td>
                     </tr>
