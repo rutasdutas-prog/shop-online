@@ -67,9 +67,21 @@ export default async function ProductsPage() {
                   </td>
                   <td className="px-5 py-3 text-zinc-500 text-xs">{product.sku || '—'}</td>
                   <td className="px-5 py-3 text-right">
-                    <div className="font-medium text-zinc-900">Rp {product.price.toLocaleString('id-ID')}</div>
-                    {product.discount_price && (
-                      <div className="text-xs text-red-500">Diskon: Rp {product.discount_price.toLocaleString('id-ID')}</div>
+                    {Array.isArray(product.variants) && product.variants.length > 0 ? (
+                      <div>
+                        <div className="text-xs text-zinc-400 mb-0.5">Mulai dari</div>
+                        <div className="font-medium text-zinc-900">
+                          Rp {Math.min(...product.variants.map((v: any) => Number(v.price) || 0)).toLocaleString('id-ID')}
+                        </div>
+                        <div className="text-xs text-zinc-400">{product.variants.length} varian</div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="font-medium text-zinc-900">Rp {(product.price || 0).toLocaleString('id-ID')}</div>
+                        {product.discount_price && (
+                          <div className="text-xs text-red-500">Diskon: Rp {product.discount_price.toLocaleString('id-ID')}</div>
+                        )}
+                      </div>
                     )}
                   </td>
                   <td className="px-5 py-3 text-center">

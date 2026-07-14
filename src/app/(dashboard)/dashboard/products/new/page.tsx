@@ -10,6 +10,7 @@ import ImageSortableGallery, { PreviewItem } from '@/components/storefront/image
 interface Variant {
   name: string
   price: string
+  discount_price: string
   stock: string
   imageUrl: string
   imageFile?: File
@@ -44,7 +45,7 @@ function NewProductForm() {
   })()
 
   const addVariant = () => {
-    setVariants(v => [...v, { name: '', price: '', stock: '0', imageUrl: '' }])
+    setVariants(v => [...v, { name: '', price: '', discount_price: '', stock: '0', imageUrl: '' }])
   }
 
   const removeVariant = (idx: number) => {
@@ -72,6 +73,7 @@ function NewProductForm() {
     const variantsData = variants.map(({ imageFile, imageUrl, ...rest }) => ({
       ...rest,
       price: rest.price.replace(/\./g, ''),
+      discount_price: rest.discount_price ? rest.discount_price.replace(/\./g, '') : '',
       stock: rest.stock,
       imageUrl: ''
     }))
@@ -257,12 +259,36 @@ function NewProductForm() {
                           onChange={e => updateVariant(idx, 'name', e.target.value)}
                           className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors" />
                         <div className="grid grid-cols-2 gap-2">
-                          <input type="text" placeholder="Harga (mis: 150000) *" required value={v.price}
-                            onChange={e => { const val = e.target.value.replace(/\D/g, ''); updateVariant(idx, 'price', val ? parseInt(val).toLocaleString('id-ID') : '') }}
-                            className="h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors" />
-                          <input type="number" placeholder="Stok *" min="0" required value={v.stock}
+                          {/* Harga normal */}
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-zinc-400 font-medium">Harga *</label>
+                            <div className="flex items-center h-9 border border-zinc-200 rounded-lg overflow-hidden focus-within:border-zinc-400">
+                              <span className="px-2 text-xs text-zinc-400 bg-zinc-50 border-r border-zinc-200 h-full flex items-center">Rp</span>
+                              <input type="text" placeholder="150.000" required value={v.price}
+                                onChange={e => { const val = e.target.value.replace(/\D/g, ''); updateVariant(idx, 'price', val ? parseInt(val).toLocaleString('id-ID') : '') }}
+                                className="flex-1 px-2 text-sm outline-none bg-transparent" />
+                            </div>
+                          </div>
+                          {/* Harga coret (opsional) */}
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-zinc-400 font-medium">Harga Coret <span className="text-zinc-300">(Opsional)</span></label>
+                            <div className="flex items-center h-9 border border-zinc-200 rounded-lg overflow-hidden focus-within:border-zinc-400">
+                              <span className="px-2 text-xs text-zinc-400 bg-zinc-50 border-r border-zinc-200 h-full flex items-center">Rp</span>
+                              <input type="text" placeholder="200.000" value={v.discount_price || ''}
+                                onChange={e => { const val = e.target.value.replace(/\D/g, ''); updateVariant(idx, 'discount_price', val ? parseInt(val).toLocaleString('id-ID') : '') }}
+                                className="flex-1 px-2 text-sm outline-none bg-transparent" />
+                            </div>
+                            {v.discount_price && v.price && Number(v.discount_price.replace(/\./g,'')) > Number(v.price.replace(/\./g,'')) && (
+                              <p className="text-[10px] text-emerald-600">Coret: Rp {v.discount_price} → Rp {v.price}</p>
+                            )}
+                          </div>
+                        </div>
+                        {/* Stok */}
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-zinc-400 font-medium">Stok *</label>
+                          <input type="number" placeholder="Stok" min="0" required value={v.stock}
                             onChange={e => updateVariant(idx, 'stock', e.target.value)}
-                            className="h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors" />
+                            className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors" />
                         </div>
                       </div>
                     </div>

@@ -37,9 +37,19 @@ export function InventoryRow({ item }: { item: any }) {
       <td className="px-5 py-3 text-zinc-500 text-xs">{item.sku || '—'}</td>
       <td className="px-5 py-3 text-center">
         {item.has_variants ? (
-          <div className="flex items-center justify-center gap-3 group">
-            <span className="font-semibold text-zinc-900">{item.stock_level}</span>
-            <span className="text-[10px] text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded" title="Stok varian, edit di menu Produk">Multi Varian</span>
+          <div className="flex flex-col items-center justify-center gap-1.5 group">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-zinc-900">{item.stock_level}</span>
+              <span className="text-[10px] text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded" title="Total stok semua varian">Multi Varian</span>
+            </div>
+            <div className="text-left w-full text-[10px] text-zinc-500 bg-zinc-50 border border-zinc-100 rounded p-1.5 space-y-1">
+              {(item.variants || []).map((v: any, i: number) => (
+                <div key={i} className="flex justify-between items-center">
+                  <span className="truncate pr-2">{v.name}</span>
+                  <span className={`font-semibold ${v.stock <= 5 ? 'text-red-500' : 'text-zinc-700'}`}>{v.stock}</span>
+                </div>
+              ))}
+            </div>
           </div>
         ) : isEditing ? (
           <form onSubmit={handleSave} className="flex items-center justify-center gap-2">

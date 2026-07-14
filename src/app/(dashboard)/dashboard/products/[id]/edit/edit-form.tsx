@@ -7,6 +7,15 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import ImageSortableGallery, { PreviewItem } from '@/components/storefront/image-sortable-gallery'
 
+interface Variant {
+  name: string
+  price: string
+  discount_price: string
+  stock: string
+  imageUrl: string
+  imageFile?: File
+}
+
 export default function EditProductForm({ product, categories = [], error }: { product: any, categories?: { id: string; name: string; slug: string }[], error?: string }) {
   const [previews, setPreviews] = useState<PreviewItem[]>(
     (product.images || []).map((url: string, i: number) => ({ 
@@ -20,7 +29,16 @@ export default function EditProductForm({ product, categories = [], error }: { p
   const [deletedImages, setDeletedImages] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
-  const hasVariants = Boolean(product.variants?.length)
+  const [hasVariants, setHasVariants] = useState(Boolean(product.variants?.length))
+  const [variants, setVariants] = useState<Variant[]>(
+    (product.variants || []).map((v: any) => ({
+      name: v.name || '',
+      price: v.price?.toString() || '',
+      discount_price: v.discount_price?.toString() || '',
+      stock: v.stock?.toString() || '0',
+      imageUrl: v.imageUrl || ''
+    }))
+  )
   const [categoryId, setCategoryId] = useState(product.category_id || '')
   
   const [basePrice, setBasePrice] = useState(product.price?.toString() || '')
@@ -40,6 +58,24 @@ export default function EditProductForm({ product, categories = [], error }: { p
     setDeletedImages(prev => [...prev, url])
   }
 
+  const addVariant = () => {
+    setVariants(v => [...v, { name: '', price: '', discount_price: '', stock: '0', imageUrl: '' }])
+  }
+
+  const removeVariant = (idx: number) => {
+    setVariants(v => v.filter((_, i) => i !== idx))
+  }
+
+  const updateVariant = (idx: number, field: keyof Variant, value: string) => {
+    setVariants(v => v.map((item, i) => i === idx ? { ...item, [field]: value } : item))
+  }
+
+  const handleVariantImage = (idx: number, file: File | null) => {
+    if (!file) return
+    const url = URL.createObjectURL(file)
+    setVariants(v => v.map((item, i) => i === idx ? { ...item, imageUrl: url, imageFile: file } : item))
+  }
+
   const formAction = async (formData: FormData) => {
     setIsSubmitting(true)
     formData.delete('files')
@@ -54,6 +90,19 @@ export default function EditProductForm({ product, categories = [], error }: { p
       url: p.isExisting ? p.url : p.name
     }))
     formData.append('final_image_order', JSON.stringify(finalOrder))
+
+    variants.forEach((v, idx) => {
+      if (v.imageFile) formData.append(`variant_image_${idx}`, v.imageFile)
+    })
+    const variantsData = variants.map(({ imageFile, imageUrl, ...rest }) => ({
+      ...rest,
+      price: rest.price.replace(/\./g, ''),
+      discount_price: rest.discount_price ? rest.discount_price.replace(/\./g, '') : '',
+      stock: rest.stock,
+      imageUrl: imageUrl.startsWith('blob:') ? '' : imageUrl // keep old url if exists
+    }))
+    formData.set('variants_json', JSON.stringify(variantsData))
+    formData.set('has_variants', hasVariants ? '1' : '0')
     
     try {
       await updateProduct(formData)
@@ -208,6 +257,103 @@ export default function EditProductForm({ product, categories = [], error }: { p
           <textarea id="description" name="description" rows={6} defaultValue={product.description || ''}
             className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors resize-none" />
         </div>
+      </div>
+
+      {/* Varian Produk */}
+      <div className="bg-white rounded-xl border border-zinc-100 p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-medium text-zinc-700">Varian Produk</h2>
+            <p className="text-xs text-zinc-400 mt-0.5">Contoh: Warna, Ukuran, Material</p>
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <span className="text-xs text-zinc-500">Aktifkan Varian</span>
+            <div className="relative">
+              <input type="checkbox" className="sr-only" checked={hasVariants} onChange={e => { setHasVariants(e.target.checked); if (!e.target.checked) setVariants([]) }} />
+              <div className={`w-10 h-6 rounded-full transition-colors ${hasVariants ? 'bg-zinc-900' : 'bg-zinc-200'}`}></div>
+              <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${hasVariants ? 'left-5' : 'left-1'}`}></div>
+            </div>
+          </label>
+        </div>
+
+        {hasVariants && (
+          <div className="space-y-3">
+            {variants.map((v, idx) => (
+              <div key={idx} className="border border-zinc-200 rounded-xl p-4 space-y-3 bg-zinc-50">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-semibold text-zinc-700">Varian {idx + 1}</span>
+                  <button type="button" onClick={() => removeVariant(idx)} className="text-red-400 hover:text-red-600 text-xs transition-colors">× Hapus</button>
+                </div>
+
+                {/* Foto Varian */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-zinc-600">Foto Varian</label>
+                  <div className="flex items-center gap-3">
+                    {v.imageUrl ? (
+                      <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-zinc-200 flex-shrink-0">
+                        <img src={v.imageUrl} alt="variant" className="w-full h-full object-cover" />
+                        <button type="button" onClick={() => updateVariant(idx, 'imageUrl', '')}
+                          className="absolute top-0.5 right-0.5 bg-black/60 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">×</button>
+                      </div>
+                    ) : (
+                      <label className="w-20 h-20 rounded-lg border-2 border-dashed border-zinc-300 flex flex-col items-center justify-center cursor-pointer hover:border-zinc-400 transition-colors flex-shrink-0">
+                        <span className="text-2xl">📷</span>
+                        <span className="text-[10px] text-zinc-400 mt-1">Upload</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={e => handleVariantImage(idx, e.target.files?.[0] || null)} />
+                      </label>
+                    )}
+                    <div className="flex-1 space-y-2">
+                      <input type="text" placeholder="Nama varian (mis: Merah, L, Kayu Jati) *" required value={v.name}
+                        onChange={e => updateVariant(idx, 'name', e.target.value)}
+                        className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors" />
+                      <div className="grid grid-cols-2 gap-2">
+                        {/* Harga normal */}
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-zinc-400 font-medium">Harga *</label>
+                          <div className="flex items-center h-9 border border-zinc-200 rounded-lg overflow-hidden focus-within:border-zinc-400">
+                            <span className="px-2 text-xs text-zinc-400 bg-zinc-50 border-r border-zinc-200 h-full flex items-center">Rp</span>
+                            <input type="text" placeholder="150.000" required value={v.price}
+                              onChange={e => { const val = e.target.value.replace(/\D/g, ''); updateVariant(idx, 'price', val ? parseInt(val).toLocaleString('id-ID') : '') }}
+                              className="flex-1 px-2 text-sm outline-none bg-transparent" />
+                          </div>
+                        </div>
+                        {/* Harga coret (opsional) */}
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-zinc-400 font-medium">Harga Coret <span className="text-zinc-300">(Opsional)</span></label>
+                          <div className="flex items-center h-9 border border-zinc-200 rounded-lg overflow-hidden focus-within:border-zinc-400">
+                            <span className="px-2 text-xs text-zinc-400 bg-zinc-50 border-r border-zinc-200 h-full flex items-center">Rp</span>
+                            <input type="text" placeholder="200.000" value={v.discount_price || ''}
+                              onChange={e => { const val = e.target.value.replace(/\D/g, ''); updateVariant(idx, 'discount_price', val ? parseInt(val).toLocaleString('id-ID') : '') }}
+                              className="flex-1 px-2 text-sm outline-none bg-transparent" />
+                          </div>
+                          {v.discount_price && v.price && Number(v.discount_price.replace(/\./g,'')) > Number(v.price.replace(/\./g,'')) && (
+                            <p className="text-[10px] text-emerald-600">Coret: Rp {v.discount_price} → Rp {v.price}</p>
+                          )}
+                        </div>
+                      </div>
+                      {/* Stok */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-zinc-400 font-medium">Stok *</label>
+                        <input type="number" placeholder="Stok" min="0" required value={v.stock}
+                          onChange={e => updateVariant(idx, 'stock', e.target.value)}
+                          className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 transition-colors" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <button type="button" onClick={addVariant}
+              className="w-full border-2 border-dashed border-zinc-200 rounded-xl py-3 text-sm text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 transition-all flex items-center justify-center gap-2">
+              + Tambah Varian
+            </button>
+
+            {variants.length === 0 && (
+              <p className="text-center text-xs text-zinc-400 py-2">Belum ada varian. Klik tombol di atas untuk menambahkan.</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Submit */}
