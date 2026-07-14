@@ -9,6 +9,7 @@ const adminNavItems = [
   { href: '/admin', label: 'Overview Platform', icon: '⊞', exact: true },
   { href: '/admin/stores', label: 'Manajemen Toko', icon: '🏪' },
   { href: '/admin/users', label: 'Manajemen Pengguna', icon: '👤' },
+  { href: '/admin/orders', label: 'Semua Orderan', icon: '🛒' },
 ]
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
