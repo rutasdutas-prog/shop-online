@@ -26,7 +26,40 @@ export async function toggleStoreStatus(formData: FormData) {
 export async function deleteStore(formData: FormData) {
   const supabase = await assertSuperAdmin()
   const storeId = formData.get('store_id') as string
+
+  // 1. Delete cart items via carts
+  const { data: carts } = await supabase.from('carts').select('id').eq('store_id', storeId)
+  if (carts && carts.length > 0) {
+    const cartIds = carts.map(c => c.id)
+    await supabase.from('cart_items').delete().in('cart_id', cartIds)
+  }
+  await supabase.from('carts').delete().eq('store_id', storeId)
+
+  // 2. Delete orders and order items
+  const { data: orders } = await supabase.from('orders').select('id').eq('store_id', storeId)
+  if (orders && orders.length > 0) {
+    const orderIds = orders.map(o => o.id)
+    await supabase.from('order_items').delete().in('order_id', orderIds)
+  }
+  await supabase.from('orders').delete().eq('store_id', storeId)
+
+  // 3. Delete vouchers
+  await supabase.from('vouchers').delete().eq('store_id', storeId)
+
+  // 4. Delete products and inventory
+  const { data: products } = await supabase.from('products').select('id').eq('store_id', storeId)
+  if (products && products.length > 0) {
+    const productIds = products.map(p => p.id)
+    await supabase.from('inventory').delete().in('product_id', productIds)
+  }
+  await supabase.from('products').delete().eq('store_id', storeId)
+
+  // 5. Delete categories
+  await supabase.from('categories').delete().eq('store_id', storeId)
+
+  // 6. Finally delete the store itself (slug freed for reuse)
   await supabase.from('stores').delete().eq('id', storeId)
+
   revalidatePath('/admin/stores')
   revalidatePath('/admin')
 }

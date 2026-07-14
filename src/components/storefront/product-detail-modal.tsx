@@ -18,9 +18,10 @@ interface ProductDetailModalProps {
   store: any
   themeColor: string
   lang: 'id' | 'en'
+  storeId?: string
 }
 
-export default function ProductDetailModal({ isOpen, onClose, product, store, themeColor, lang }: ProductDetailModalProps) {
+export default function ProductDetailModal({ isOpen, onClose, product, store, themeColor, lang, storeId }: ProductDetailModalProps) {
   const [activeImage, setActiveImage] = useState(0)
   const [selectedVariant, setSelectedVariant] = useState<number | null>(null)
 
@@ -50,7 +51,7 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
   const activeVariant = selectedVariant !== null ? productVariants[selectedVariant] : null
 
   // Price calculation
-  const minVariantPrice = hasVariants ? Math.min(...productVariants.map(v => Number(v.price) || 0)) : 0
+  const minVariantPrice = hasVariants ? Math.min(...productVariants.map(v => v.discount_price ? Number(v.discount_price) : (Number(v.price) || 0))) : 0
   const basePrice = hasVariants
     ? (activeVariant ? Number(activeVariant.price) : minVariantPrice)
     : Number(product.price) || 0
@@ -94,10 +95,20 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
       alert(lang === 'id' ? 'Pilih varian terlebih dahulu!' : 'Please select a variant first!')
       return
     }
-    const productLabel = hasVariants && activeVariant
-      ? `${product.name} - ${activeVariant.name}`
-      : product.name
-    window.dispatchEvent(new CustomEvent('ai-cart-add', { detail: { productName: productLabel } }))
+    const variantName = activeVariant?.name
+    const price = displayPrice
+    const image = displayImage || (product.images?.[0]) || undefined
+    window.dispatchEvent(new CustomEvent('cart-direct-add', {
+      detail: {
+        productId: product.id,
+        productName: product.name,
+        variantName,
+        price,
+        image,
+        quantity: 1
+      }
+    }))
+    onClose()
   }
 
   return (
@@ -145,6 +156,32 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
               <div className="absolute top-4 left-4 z-10">
                 <span className="bg-zinc-600 text-white text-xs font-bold px-3 py-1.5 rounded-full">Habis</span>
               </div>
+            )}
+
+            {/* Gallery Navigation Arrows */}
+            {images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setActiveImage((prev) => (prev === 0 ? images.length - 1 : prev - 1))
+                  }}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white/70 hover:bg-white backdrop-blur rounded-full shadow-sm text-zinc-700 transition-colors z-20"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setActiveImage((prev) => (prev === images.length - 1 ? 0 : prev + 1))
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white/70 hover:bg-white backdrop-blur rounded-full shadow-sm text-zinc-700 transition-colors z-20"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                </button>
+              </>
             )}
           </div>
 

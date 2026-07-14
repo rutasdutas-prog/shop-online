@@ -11,6 +11,7 @@ import { SearchAutocomplete } from '@/components/storefront/search-autocomplete'
 import { CategorySidebar } from '@/components/storefront/category-sidebar'
 import { StoreSortDropdown } from '@/components/storefront/store-sort-dropdown'
 import ProductCard from '@/components/storefront/product-card'
+import { CartPanel } from '@/components/storefront/cart-panel'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -273,6 +274,9 @@ export default async function StorefrontPage(
           </Link>
         </div>
       </footer>
+
+      {/* ═══════════════════════ CART PANEL ═══════════════════════ */}
+      <CartPanel storeId={store.id} themeColor={themeColor} lang={lang} />
 
       {/* ═══════════════════════ AI CHATBOT ═══════════════════════ */}
       <StoreChatbot

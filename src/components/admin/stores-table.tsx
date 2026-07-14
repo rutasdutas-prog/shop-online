@@ -192,7 +192,7 @@ export function StoresTable({ stores }: { stores: Store[] }) {
             </p>
             {confirm.type === 'delete' && (
               <p className="text-xs text-red-400 text-center mb-5 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">
-                ⚠️ Semua produk toko ini akan ikut terhapus. Tidak bisa dibatalkan!
+                ⚠️ Semua produk, pesanan, kategori, dan data toko akan ikut terhapus. Link /{confirm.storeName.toLowerCase().replace(/\s+/g, '')} akan tersedia kembali untuk didaftarkan orang lain. Tidak bisa dibatalkan!
               </p>
             )}
             <div className="flex gap-3">
