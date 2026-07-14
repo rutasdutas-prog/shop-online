@@ -35,6 +35,8 @@ export function CartPanel({ storeId, themeColor, lang, whatsapp }: CartPanelProp
   const [items, setItems] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(false)
   const [adding, setAdding] = useState(false)
+  const [customerName, setCustomerName] = useState('')
+  const [customerWa, setCustomerWa] = useState('')
 
   const fetchCart = useCallback(async () => {
     if (loading) return
@@ -133,14 +135,19 @@ export function CartPanel({ storeId, themeColor, lang, whatsapp }: CartPanelProp
   const totalQty = items.reduce((s, i) => s + i.quantity, 0)
 
   const handleCheckout = () => {
+    if (!customerName.trim() || !customerWa.trim()) {
+      alert(lang === 'id' ? 'Mohon isi Nama dan No WhatsApp Anda' : 'Please fill in your Name and WhatsApp')
+      return
+    }
+
     const text = items.map(i =>
       `• ${i.name}${i.variant ? ` (${i.variant})` : ''} x${i.quantity} = Rp ${(i.price * i.quantity).toLocaleString('id-ID')}`
     ).join('\n')
-    const msg = `Halo, saya ingin memesan:\n\n${text}\n\nTotal: *Rp ${total.toLocaleString('id-ID')}*\n\nMohon konfirmasinya ya 🙏`
+    const msg = `Halo, saya *${customerName.trim()}* (WA: ${customerWa.trim()}) ingin memesan:\n\n${text}\n\nTotal: *Rp ${total.toLocaleString('id-ID')}*\n\nMohon konfirmasinya ya 🙏`
     
     setOpen(false)
     if (whatsapp) {
-      window.open(`https://wa.me/62${whatsapp}?text=${encodeURIComponent(msg)}`, '_blank')
+      window.open(`https://wa.me/62${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank')
     } else {
       alert(lang === 'id' ? 'Nomor WhatsApp penjual belum diatur.' : 'Seller WhatsApp number is not configured.')
     }
@@ -252,6 +259,30 @@ export function CartPanel({ storeId, themeColor, lang, whatsapp }: CartPanelProp
               <span className="text-sm font-medium text-zinc-600">{lang === 'id' ? 'Total' : 'Total'}</span>
               <span className="text-lg font-extrabold text-zinc-900">Rp {total.toLocaleString('id-ID')}</span>
             </div>
+            
+            <div className="space-y-3 pt-3 border-t border-zinc-100">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-zinc-700">{lang === 'id' ? 'Nama Anda' : 'Your Name'}</label>
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder={lang === 'id' ? 'Masukkan nama lengkap' : 'Enter full name'}
+                  className="w-full px-3 py-2 text-sm bg-zinc-50 border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 focus:bg-white transition-colors"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-zinc-700">{lang === 'id' ? 'Nomor WhatsApp' : 'WhatsApp Number'}</label>
+                <input
+                  type="tel"
+                  value={customerWa}
+                  onChange={(e) => setCustomerWa(e.target.value)}
+                  placeholder={lang === 'id' ? 'Contoh: 0812...' : 'Example: 0812...'}
+                  className="w-full px-3 py-2 text-sm bg-zinc-50 border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 focus:bg-white transition-colors"
+                />
+              </div>
+            </div>
+
             <button
               onClick={handleCheckout}
               className="w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-lg transition-all active:scale-[0.98] hover:opacity-90"

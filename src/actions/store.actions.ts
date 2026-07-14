@@ -70,9 +70,19 @@ export async function updateStore(formData: FormData) {
     }
   }
 
+  const facebook = formData.get('facebook') as string
+  const tiktok = formData.get('tiktok') as string
+
+  const { data: currentStore } = await supabase.from('stores').select('theme_settings').eq('id', store.id).single()
+  const theme_settings = {
+    ...(currentStore?.theme_settings || {}),
+    facebook,
+    tiktok
+  }
+
   const { error } = await supabase
     .from('stores')
-    .update({ name, description, whatsapp, instagram, address, logo_url, banner_url })
+    .update({ name, description, whatsapp, instagram, address, logo_url, banner_url, theme_settings })
     .eq('id', store.id)
 
   if (error) {

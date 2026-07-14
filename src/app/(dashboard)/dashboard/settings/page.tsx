@@ -135,6 +135,36 @@ export default async function SettingsPage(props: {
                 />
               </div>
             </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="facebook" className="text-xs font-medium text-zinc-600">Facebook URL</Label>
+              <div className="flex items-center rounded-lg border border-zinc-200 overflow-hidden focus-within:border-zinc-400 transition-colors">
+                <span className="bg-zinc-50 border-r border-zinc-200 px-3 py-2 text-xs text-zinc-400 shrink-0">URL</span>
+                <input
+                  id="facebook"
+                  name="facebook"
+                  type="text"
+                  defaultValue={store.theme_settings?.facebook || ''}
+                  placeholder="https://facebook.com/namatoko"
+                  className="flex-1 px-3 py-2 text-sm outline-none bg-transparent"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="tiktok" className="text-xs font-medium text-zinc-600">TikTok URL</Label>
+              <div className="flex items-center rounded-lg border border-zinc-200 overflow-hidden focus-within:border-zinc-400 transition-colors">
+                <span className="bg-zinc-50 border-r border-zinc-200 px-3 py-2 text-xs text-zinc-400 shrink-0">URL</span>
+                <input
+                  id="tiktok"
+                  name="tiktok"
+                  type="text"
+                  defaultValue={store.theme_settings?.tiktok || ''}
+                  placeholder="https://tiktok.com/@namatoko"
+                  className="flex-1 px-3 py-2 text-sm outline-none bg-transparent"
+                />
+              </div>
+            </div>
           </div>
         </div>
 

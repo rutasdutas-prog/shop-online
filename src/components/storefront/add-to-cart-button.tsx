@@ -16,7 +16,10 @@ interface AddToCartButtonProps {
 export function AddToCartButton({ productId, productName, price, image, className, style, children, title }: AddToCartButtonProps) {
   return (
     <button 
-      onClick={() => {
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation()
+        e.preventDefault()
         window.dispatchEvent(new CustomEvent('cart-direct-add', {
           detail: {
             productId,
