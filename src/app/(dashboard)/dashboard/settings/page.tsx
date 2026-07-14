@@ -7,6 +7,7 @@ import { getLanguage } from '@/actions/language.actions'
 import { dictionaries } from '@/lib/i18n/dictionaries'
 import { LogoUpload } from '@/components/settings/logo-upload'
 import { BannerUpload } from '@/components/settings/banner-upload'
+import { WhatsAppInput } from '@/components/settings/whatsapp-input'
 
 export const dynamic = 'force-dynamic'
 
@@ -116,14 +117,7 @@ export default async function SettingsPage(props: {
               <Label htmlFor="whatsapp" className="text-xs font-medium text-zinc-600">{dict.settings.whatsapp}</Label>
               <div className="flex items-center rounded-lg border border-zinc-200 overflow-hidden focus-within:border-zinc-400 transition-colors">
                 <span className="bg-zinc-50 border-r border-zinc-200 px-3 py-2 text-xs text-zinc-400 shrink-0">+62</span>
-                <input
-                  id="whatsapp"
-                  name="whatsapp"
-                  type="tel"
-                  defaultValue={store.whatsapp || ''}
-                  placeholder="81234567890"
-                  className="flex-1 px-3 py-2 text-sm outline-none bg-transparent"
-                />
+                <WhatsAppInput defaultValue={store.whatsapp || ''} />
               </div>
             </div>
 

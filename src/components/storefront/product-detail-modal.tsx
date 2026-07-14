@@ -117,23 +117,22 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity cursor-pointer" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative w-full h-full md:h-auto md:max-h-[90vh] md:max-w-4xl bg-white md:rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="relative w-full h-full md:h-auto md:max-h-[90vh] md:max-w-4xl md:rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in zoom-in-95 duration-200" style={{ backgroundColor: '#111120', border: '1px solid rgba(255,255,255,0.10)' }}>
 
         {/* Close Mobile */}
-        <button onClick={onClose} className="md:hidden absolute top-4 right-4 z-50 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-md rounded-full text-zinc-900 shadow-sm border border-zinc-200">
+        <button onClick={onClose} className="md:hidden absolute top-4 right-4 z-50 w-8 h-8 flex items-center justify-center backdrop-blur-md rounded-full text-white shadow-sm" style={{ backgroundColor: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.20)' }}>
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
 
         {/* Close Desktop */}
-        <button onClick={onClose} className="hidden md:flex absolute top-4 right-4 z-50 w-8 h-8 items-center justify-center bg-zinc-100 hover:bg-zinc-200 rounded-full text-zinc-600 transition-colors">
+        <button onClick={onClose} className="hidden md:flex absolute top-4 right-4 z-50 w-8 h-8 items-center justify-center rounded-full text-white/60 hover:text-white transition-colors" style={{ backgroundColor: 'rgba(255,255,255,0.10)' }}>
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
 
         {/* Left: Image Gallery */}
-        <div className="w-full md:w-1/2 flex flex-col bg-zinc-50 border-r border-zinc-100 relative">
-
+        <div className="w-full md:w-1/2 flex flex-col relative" style={{ borderRight: '1px solid rgba(255,255,255,0.07)' }}>
           {/* Main Image */}
-          <div className="w-full aspect-square md:aspect-[4/5] bg-zinc-100 relative">
+          <div className="w-full aspect-square md:aspect-[4/5] relative" style={{ backgroundColor: '#0a0918' }}>
             {displayImage ? (
               <img
                 key={displayImage}
@@ -142,7 +141,7 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
                 className="w-full h-full object-contain transition-all duration-300"
               />
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-zinc-300">
+              <div className="w-full h-full flex flex-col items-center justify-center gap-3" style={{ color: 'rgba(255,255,255,0.15)' }}>
                 <svg className="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 <span className="text-sm font-medium uppercase tracking-wider">No Image</span>
               </div>
@@ -167,7 +166,7 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
                     e.stopPropagation()
                     setActiveImage((prev) => (prev === 0 ? images.length - 1 : prev - 1))
                   }}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white/70 hover:bg-white backdrop-blur rounded-full shadow-sm text-zinc-700 transition-colors z-20"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center backdrop-blur rounded-full shadow-sm text-white/80 hover:text-white transition-colors z-20" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                 </button>
@@ -177,7 +176,7 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
                     e.stopPropagation()
                     setActiveImage((prev) => (prev === images.length - 1 ? 0 : prev + 1))
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white/70 hover:bg-white backdrop-blur rounded-full shadow-sm text-zinc-700 transition-colors z-20"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center backdrop-blur rounded-full shadow-sm text-white/80 hover:text-white transition-colors z-20" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                 </button>
@@ -187,7 +186,7 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
 
           {/* Thumbnails (product gallery images) */}
           {images.length > 1 && (
-            <div className="flex gap-2 p-4 overflow-x-auto no-scrollbar border-t border-zinc-100 bg-white">
+            <div className="flex gap-2 p-4 overflow-x-auto no-scrollbar border-t" style={{ borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.04)' }}>
               {images.map((img: string, idx: number) => (
                 <button
                   key={idx}
@@ -207,14 +206,14 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
         </div>
 
         {/* Right: Product Info */}
-        <div className="w-full md:w-1/2 flex flex-col h-full max-h-[50vh] md:max-h-none bg-white">
+        <div className="w-full md:w-1/2 flex flex-col h-full max-h-[50vh] md:max-h-none" style={{ backgroundColor: '#111120' }}>
           <div className="p-6 md:p-8 flex-1 overflow-y-auto no-scrollbar">
-            <h1 className="text-xl md:text-2xl font-bold text-zinc-900 leading-snug mb-3">{product.name}</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-white leading-snug mb-3">{product.name}</h1>
 
             {/* Price */}
             <div className="flex items-end gap-3 mb-2">
               {hasDiscount && (
-                <span className="text-sm text-zinc-400 line-through font-medium">
+                <span className="text-sm line-through font-medium" style={{ color: 'rgba(255,255,255,0.30)' }}>
                   Rp {basePrice.toLocaleString('id-ID')}
                 </span>
               )}
@@ -226,16 +225,16 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
             {/* Stock indicator */}
             <div className="mb-6">
               {hasVariants && selectedVariant !== null && activeVariant && (
-                <span className="text-xs text-zinc-500">
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.50)' }}>
                   Stok{' '}
-                  <span className={`font-semibold ${activeVariant.stock <= 5 ? 'text-red-500' : 'text-zinc-700'}`}>
+                  <span className={`font-semibold ${activeVariant.stock <= 5 ? 'text-red-400' : 'text-white/80'}`}>
                     {activeVariant.stock}
                   </span>
                 </span>
               )}
               {!hasVariants && stock !== null && (
-                <span className="text-xs text-zinc-500">
-                  Stok <span className={`font-semibold ${stock <= 5 ? 'text-red-500' : 'text-zinc-700'}`}>{stock}</span>
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.50)' }}>
+                  Stok <span className={`font-semibold ${stock <= 5 ? 'text-red-400' : 'text-white/80'}`}>{stock}</span>
                 </span>
               )}
             </div>
@@ -243,7 +242,7 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
             {/* Variant Picker */}
             {hasVariants && (
               <div className="mb-6">
-                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">
+                <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.40)' }}>
                   {lang === 'id' ? 'Pilih Varian' : 'Select Variant'}
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -258,11 +257,12 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
                         disabled={outOfStock}
                         className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-sm font-medium transition-all ${
                           isSelected
-                            ? 'border-zinc-900 bg-zinc-900 text-white shadow-lg scale-[1.03]'
+                            ? 'border-white bg-white/15 text-white shadow-lg scale-[1.03]'
                             : outOfStock
-                            ? 'border-zinc-100 bg-zinc-50 text-zinc-300 cursor-not-allowed'
-                            : 'border-zinc-200 bg-white text-zinc-700 hover:border-zinc-400'
+                            ? 'text-white/20 cursor-not-allowed'
+                            : 'text-white/70 hover:text-white'
                         }`}
+                        style={isSelected ? { borderColor: themeColor, backgroundColor: `${themeColor}20` } : outOfStock ? { borderColor: 'rgba(255,255,255,0.08)' } : { borderColor: 'rgba(255,255,255,0.15)' }}
                       >
                         {v.imageUrl && v.imageUrl.startsWith('http') && (
                           <img
@@ -288,11 +288,11 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
             )}
 
             {/* Description */}
-            <div className="border-t border-zinc-100 pt-6">
-              <h3 className="text-sm font-semibold text-zinc-900 mb-3 uppercase tracking-wider">
+            <div className="border-t pt-6" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+              <h3 className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.40)' }}>
                 {lang === 'id' ? 'Deskripsi Produk' : 'Product Description'}
               </h3>
-              <div className="text-sm text-zinc-600 leading-relaxed space-y-2">
+              <div className="text-sm leading-relaxed space-y-2" style={{ color: 'rgba(255,255,255,0.60)' }}>
                 {descriptionLines.map((line: string, i: number) => (
                   <p key={i}>{line || <>&nbsp;</>}</p>
                 ))}
@@ -301,7 +301,7 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
           </div>
 
           {/* CTA */}
-          <div className="p-4 md:p-6 border-t border-zinc-100 bg-white md:rounded-br-2xl shrink-0">
+          <div className="p-4 md:p-6 shrink-0 md:rounded-br-2xl" style={{ borderTop: '1px solid rgba(255,255,255,0.07)', backgroundColor: 'rgba(0,0,0,0.20)' }}>
             {isOutOfStock && selectedVariant !== null ? (
               <button disabled className="w-full text-zinc-400 bg-zinc-100 text-sm md:text-base font-semibold py-3.5 rounded-xl cursor-not-allowed">
                 {lang === 'id' ? 'Stok Habis' : 'Out of Stock'}

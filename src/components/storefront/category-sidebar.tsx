@@ -22,7 +22,6 @@ export function CategorySidebar({ categories, storeSlug, themeColor }: CategoryS
   const pathname = usePathname()
   const currentCategory = searchParams.get('category')
   const currentSort = searchParams.get('sort')
-  const [mobileOpen, setMobileOpen] = useState(false)
 
   const buildUrl = (categorySlug: string | null) => {
     const params = new URLSearchParams()
@@ -46,16 +45,15 @@ export function CategorySidebar({ categories, storeSlug, themeColor }: CategoryS
 
   return (
     <>
-      {/* ─── MOBILE: Filter bar (horizontal sticky) ─── */}
+      {/* MOBILE: Horizontal pill scroll */}
       <div className="lg:hidden">
-        {/* Category pill scroll */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none -mx-1 px-1">
           <Link
             href={buildUrl(null)}
-            className="flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold border transition-all"
+            className="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all border"
             style={!currentCategory
-              ? { backgroundColor: themeColor, color: '#fff', borderColor: themeColor }
-              : { backgroundColor: '#fff', color: '#52525b', borderColor: '#e4e4e7' }}
+              ? { backgroundColor: themeColor, color: '#fff', borderColor: themeColor, boxShadow: `0 0 12px ${themeColor}50` }
+              : { backgroundColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.65)', borderColor: 'rgba(255,255,255,0.12)' }}
           >
             Semua
           </Link>
@@ -65,10 +63,10 @@ export function CategorySidebar({ categories, storeSlug, themeColor }: CategoryS
               <Link
                 key={cat.id}
                 href={buildUrl(cat.slug)}
-                className="flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold border transition-all"
+                className="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all border"
                 style={isActive
-                  ? { backgroundColor: themeColor, color: '#fff', borderColor: themeColor }
-                  : { backgroundColor: '#fff', color: '#52525b', borderColor: '#e4e4e7' }}
+                  ? { backgroundColor: themeColor, color: '#fff', borderColor: themeColor, boxShadow: `0 0 12px ${themeColor}50` }
+                  : { backgroundColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.65)', borderColor: 'rgba(255,255,255,0.12)' }}
               >
                 {cat.name}
               </Link>
@@ -76,17 +74,18 @@ export function CategorySidebar({ categories, storeSlug, themeColor }: CategoryS
           })}
         </div>
 
-        {/* Sort row */}
+        {/* Mobile sort + heading */}
         <div className="flex items-center justify-between mt-3 mb-1">
-          <span className="text-xs text-zinc-400 font-medium">
-            {currentCategoryLabel}
-          </span>
+          <span className="text-xs text-white/40 font-medium">{currentCategoryLabel}</span>
           <select
             value={currentSort || 'latest'}
             onChange={e => handleSortChange(e.target.value)}
-            className="text-xs bg-white border border-zinc-200 text-zinc-600 py-1.5 px-3 pr-7 rounded-lg focus:outline-none appearance-none shadow-sm cursor-pointer"
+            className="text-xs py-1.5 px-3 pr-7 rounded-lg focus:outline-none appearance-none cursor-pointer"
             style={{
-              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+              backgroundColor: 'rgba(255,255,255,0.10)',
+              color: 'rgba(255,255,255,0.75)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='rgba(255,255,255,0.5)' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
               backgroundPosition: 'right 0.4rem center',
               backgroundRepeat: 'no-repeat',
               backgroundSize: '1.2em 1.2em',
@@ -99,10 +98,20 @@ export function CategorySidebar({ categories, storeSlug, themeColor }: CategoryS
         </div>
       </div>
 
-      {/* ─── DESKTOP: Sidebar ─── */}
-      <div className="hidden lg:block w-56 shrink-0">
-        <div className="bg-white rounded-2xl border border-zinc-100 p-5 shadow-sm sticky top-24">
-          <h3 className="font-bold text-sm mb-4 text-zinc-900 border-b border-zinc-100 pb-3 uppercase tracking-widest">
+      {/* DESKTOP: Sidebar */}
+      <div className="hidden lg:block w-52 shrink-0">
+        <div
+          className="rounded-2xl p-5 sticky top-24"
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.10)',
+            backdropFilter: 'blur(12px)',
+          }}
+        >
+          <h3
+            className="font-bold text-xs mb-4 pb-3 uppercase tracking-widest"
+            style={{ color: 'rgba(255,255,255,0.40)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+          >
             Kategori
           </h3>
           <ul className="space-y-0.5">
@@ -110,7 +119,9 @@ export function CategorySidebar({ categories, storeSlug, themeColor }: CategoryS
               <Link
                 href={buildUrl(null)}
                 className="flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-all"
-                style={!currentCategory ? { backgroundColor: `${themeColor}18`, color: themeColor } : { color: '#52525b' }}
+                style={!currentCategory
+                  ? { backgroundColor: `${themeColor}25`, color: themeColor }
+                  : { color: 'rgba(255,255,255,0.60)' }}
               >
                 <span>Semua Produk</span>
                 {!currentCategory && <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: themeColor }} />}
@@ -122,8 +133,10 @@ export function CategorySidebar({ categories, storeSlug, themeColor }: CategoryS
                 <li key={cat.id}>
                   <Link
                     href={buildUrl(cat.slug)}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-all"
-                    style={isActive ? { backgroundColor: `${themeColor}18`, color: themeColor } : { color: '#52525b' }}
+                    className="flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-all hover:bg-white/5"
+                    style={isActive
+                      ? { backgroundColor: `${themeColor}25`, color: themeColor }
+                      : { color: 'rgba(255,255,255,0.60)' }}
                   >
                     <span>{cat.name}</span>
                     {isActive && <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: themeColor }} />}

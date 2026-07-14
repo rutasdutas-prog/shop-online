@@ -27,16 +27,19 @@ export function StoreSortDropdown() {
 
   return (
     <div className="flex items-center gap-3">
-      <label htmlFor="sort" className="text-sm font-medium text-zinc-500 hidden sm:block">
+      <label htmlFor="sort" className="text-sm font-medium hidden sm:block" style={{ color: 'rgba(255,255,255,0.40)' }}>
         Urutkan:
       </label>
       <select
         id="sort"
         value={currentSort}
         onChange={handleChange}
-        className="text-sm bg-white border border-zinc-200 text-zinc-700 py-2 px-3 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-300 appearance-none shadow-sm cursor-pointer"
+        className="text-sm py-2 px-3 pr-8 rounded-lg focus:outline-none appearance-none cursor-pointer"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+          backgroundColor: 'rgba(255,255,255,0.10)',
+          color: 'rgba(255,255,255,0.75)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='rgba(255,255,255,0.5)' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
           backgroundPosition: 'right 0.5rem center',
           backgroundRepeat: 'no-repeat',
           backgroundSize: '1.5em 1.5em'

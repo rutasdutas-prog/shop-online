@@ -55,8 +55,7 @@ export function InventoryExportButtons({ items, filename = 'Inventaris' }: Inven
       doc.setTextColor(113, 113, 122)
       doc.text(`Diekspor: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })} pukul ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`, 14, 22)
 
-      // Create flattened list
-      const flattenedItems: { id: string; name: string; sku: string; stock: number; isLow: boolean; image: string | null }[] = []
+      const flattenedItems: { id: string; name: string; sku: string; stock: number; isLow: boolean; image: string | null; isVariant?: boolean }[] = []
       items.forEach(item => {
         if (item.variants && item.variants.length > 0) {
           item.variants.forEach((v, idx) => {
@@ -66,7 +65,8 @@ export function InventoryExportButtons({ items, filename = 'Inventaris' }: Inven
               sku: item.sku || '—',
               stock: Number(v.stock) || 0,
               isLow: Number(v.stock) <= 5,
-              image: v.imageUrl?.startsWith('http') ? v.imageUrl : (item.images?.[0] || null)
+              image: v.imageUrl?.startsWith('http') ? v.imageUrl : (item.images?.[0] || null),
+              isVariant: true
             })
           })
         } else {
@@ -76,7 +76,8 @@ export function InventoryExportButtons({ items, filename = 'Inventaris' }: Inven
             sku: item.sku || '—',
             stock: item.stock_level,
             isLow: item.is_low,
-            image: item.images?.[0] || null
+            image: item.images?.[0] || null,
+            isVariant: false
           })
         }
       })
@@ -129,7 +130,10 @@ export function InventoryExportButtons({ items, filename = 'Inventaris' }: Inven
         }
 
         // Alternating row background
-        if (idx % 2 === 0) {
+        if (item.isVariant) {
+          doc.setFillColor(239, 246, 255) // light blue for variants
+          doc.rect(MARGIN_LEFT, y, PAGE_WIDTH - MARGIN_LEFT * 2, ROW_HEIGHT, 'F')
+        } else if (idx % 2 === 0) {
           doc.setFillColor(248, 248, 248)
           doc.rect(MARGIN_LEFT, y, PAGE_WIDTH - MARGIN_LEFT * 2, ROW_HEIGHT, 'F')
         }
@@ -163,9 +167,15 @@ export function InventoryExportButtons({ items, filename = 'Inventaris' }: Inven
 
         // Name (wrap if long)
         doc.setFontSize(8)
-        doc.setTextColor(24, 24, 27)
-        const nameLines = doc.splitTextToSize(item.name, COL_WIDTHS[1] - 4)
-        doc.text(nameLines.slice(0, 2), COL_STARTS[1] + 2, y + 6)
+        if (item.isVariant) {
+          doc.setTextColor(37, 99, 235) // blue text for variants
+          const nameLines = doc.splitTextToSize(`↳ [Varian] ${item.name}`, COL_WIDTHS[1] - 4)
+          doc.text(nameLines.slice(0, 2), COL_STARTS[1] + 2, y + 6)
+        } else {
+          doc.setTextColor(24, 24, 27)
+          const nameLines = doc.splitTextToSize(item.name, COL_WIDTHS[1] - 4)
+          doc.text(nameLines.slice(0, 2), COL_STARTS[1] + 2, y + 6)
+        }
 
         // SKU
         doc.setFontSize(7)
@@ -216,7 +226,7 @@ export function InventoryExportButtons({ items, filename = 'Inventaris' }: Inven
           item.variants.forEach((v) => {
             rows.push({
               'URL Foto': v.imageUrl?.startsWith('http') ? v.imageUrl : (item.images?.[0] || ''),
-              'Nama Produk / Varian': `${item.name} - ${v.name}`,
+              'Nama Produk / Varian': `↳ [Varian] ${item.name} - ${v.name}`,
               'SKU': item.sku || '-',
               'Stok': Number(v.stock) || 0,
               'Status': Number(v.stock) <= 5 ? 'Rendah ⚠️' : 'Aman ✅',

@@ -45,7 +45,8 @@ export async function updateStore(formData: FormData) {
 
   const name = formData.get('name') as string
   const description = formData.get('description') as string
-  const whatsapp = formData.get('whatsapp') as string
+  const whatsappRaw = formData.get('whatsapp') as string
+  const whatsapp = whatsappRaw ? whatsappRaw.replace(/\D/g, '') : ''
   const instagram = formData.get('instagram') as string
   const address = formData.get('address') as string
 

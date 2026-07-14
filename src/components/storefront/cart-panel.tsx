@@ -15,6 +15,7 @@ interface CartPanelProps {
   storeId: string
   themeColor: string
   lang: 'id' | 'en'
+  whatsapp?: string
 }
 
 const SESSION_KEY = 'cart_session_id'
@@ -29,7 +30,7 @@ function getSessionId(): string {
   return sid
 }
 
-export function CartPanel({ storeId, themeColor, lang }: CartPanelProps) {
+export function CartPanel({ storeId, themeColor, lang, whatsapp }: CartPanelProps) {
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -119,7 +120,13 @@ export function CartPanel({ storeId, themeColor, lang }: CartPanelProps) {
   const updateQty = (id: string, delta: number) => {
     setItems(prev => prev.map(i =>
       i.id === id ? { ...i, quantity: Math.max(1, i.quantity + delta) } : i
-    ).filter(i => i.quantity > 0))
+    ))
+  }
+
+  const setExactQty = (id: string, qty: number) => {
+    setItems(prev => prev.map(i =>
+      i.id === id ? { ...i, quantity: Math.max(1, qty) } : i
+    ))
   }
 
   const total = items.reduce((s, i) => s + i.price * i.quantity, 0)
@@ -130,9 +137,13 @@ export function CartPanel({ storeId, themeColor, lang }: CartPanelProps) {
       `• ${i.name}${i.variant ? ` (${i.variant})` : ''} x${i.quantity} = Rp ${(i.price * i.quantity).toLocaleString('id-ID')}`
     ).join('\n')
     const msg = `Halo, saya ingin memesan:\n\n${text}\n\nTotal: *Rp ${total.toLocaleString('id-ID')}*\n\nMohon konfirmasinya ya 🙏`
-    // Check if store has whatsapp - we'll redirect to checkout page
+    
     setOpen(false)
-    alert(lang === 'id' ? 'Pesanan Anda telah dikirim ke WhatsApp penjual!' : 'Your order has been sent to the seller\'s WhatsApp!')
+    if (whatsapp) {
+      window.open(`https://wa.me/62${whatsapp}?text=${encodeURIComponent(msg)}`, '_blank')
+    } else {
+      alert(lang === 'id' ? 'Nomor WhatsApp penjual belum diatur.' : 'Seller WhatsApp number is not configured.')
+    }
   }
 
   return (
@@ -219,7 +230,13 @@ export function CartPanel({ storeId, themeColor, lang }: CartPanelProps) {
                   </button>
                   <div className="flex items-center gap-1.5">
                     <button onClick={() => updateQty(item.id, -1)} className="w-6 h-6 rounded-full bg-zinc-200 hover:bg-zinc-300 text-zinc-600 text-sm font-bold flex items-center justify-center transition-colors">−</button>
-                    <span className="text-sm font-semibold text-zinc-800 w-5 text-center">{item.quantity}</span>
+                    <input 
+                      type="number" 
+                      min="1"
+                      value={item.quantity || ''} 
+                      onChange={(e) => setExactQty(item.id, parseInt(e.target.value) || 1)}
+                      className="w-10 text-center text-sm font-semibold text-zinc-800 bg-transparent outline-none no-spinners"
+                    />
                     <button onClick={() => updateQty(item.id, 1)} className="w-6 h-6 rounded-full text-white text-sm font-bold flex items-center justify-center transition-colors" style={{ backgroundColor: themeColor }}>+</button>
                   </div>
                 </div>
