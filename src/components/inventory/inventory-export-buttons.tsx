@@ -53,7 +53,7 @@ export function InventoryExportButtons({ items, filename = 'Inventaris' }: Inven
       doc.text('Laporan Inventaris Produk', 14, 16)
       doc.setFontSize(8)
       doc.setTextColor(113, 113, 122)
-      doc.text(`Diekspor: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`, 14, 22)
+      doc.text(`Diekspor: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })} pukul ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`, 14, 22)
 
       // Create flattened list
       const flattenedItems: { id: string; name: string; sku: string; stock: number; isLow: boolean; image: string | null }[] = []
@@ -188,7 +188,7 @@ export function InventoryExportButtons({ items, filename = 'Inventaris' }: Inven
         doc.setFontSize(7)
         doc.setTextColor(statusTextColor[0], statusTextColor[1], statusTextColor[2])
         doc.setFont('helvetica', 'bold')
-        doc.text(statusText, COL_STARTS[4] + 4, y + ROW_HEIGHT / 2 + 1)
+        doc.text(statusText, COL_STARTS[4] + 10, y + ROW_HEIGHT / 2 + 1, { align: 'center' })
         doc.setFont('helvetica', 'normal')
 
         y += ROW_HEIGHT
@@ -262,7 +262,7 @@ export function InventoryExportButtons({ items, filename = 'Inventaris' }: Inven
       // Add info sheet
       const infoData = [
         ['Catatan', 'Kolom "URL Foto" berisi link gambar produk. Buka di browser untuk melihat gambar.'],
-        ['Diekspor', new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })],
+        ['Diekspor', `${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })} pukul ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`],
         ['Total Produk', items.length],
         ['Stok Rendah', items.filter(i => i.is_low).length],
       ]

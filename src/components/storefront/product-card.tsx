@@ -23,7 +23,7 @@ export default function ProductCard({ product, store, themeColor, lang, dict, co
   const price = product.price || 0
   const discount = product.discount_price || 0
   const hasDiscount = !hasVariants && discount > 0 && discount < price
-  const minVariantPrice = hasVariants ? Math.min(...productVariants.map((v: any) => v.price)) : 0
+  const minVariantPrice = hasVariants ? Math.min(...productVariants.map((v: any) => v.discount_price ? Number(v.discount_price) : Number(v.price))) : 0
   const displayPrice = hasVariants ? minVariantPrice : (hasDiscount ? discount : price)
   const percentOff = hasDiscount ? Math.round((1 - discount / price) * 100) : 0
   const stock = hasVariants ? productVariants.reduce((s: number, v: any) => s + (v.stock || 0), 0) : (product.stock ?? null)
@@ -91,9 +91,15 @@ export default function ProductCard({ product, store, themeColor, lang, dict, co
             </div>
             
             {/* CTA Button — full width on all screens */}
-            <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+            <div className="mt-2" onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}>
               {hasVariants ? (
-                <ProductVariantPicker variants={productVariants} productName={product.name} themeColor={themeColor} lang={lang} />
+                <button 
+                  className="w-full flex items-center justify-center gap-1.5 text-white text-[11px] md:text-sm font-semibold py-2 md:py-2.5 rounded-lg transition-all active:scale-95 shadow-sm"
+                  style={{ backgroundColor: themeColor }}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                  {lang === 'id' ? 'Pilih Varian' : 'Select Variant'}
+                </button>
               ) : isOutOfStock ? (
                 <button disabled className="w-full text-zinc-400 bg-zinc-100 text-[11px] md:text-sm font-semibold py-2 md:py-2.5 rounded-lg cursor-not-allowed">
                   {dict.storefront.outOfStock}

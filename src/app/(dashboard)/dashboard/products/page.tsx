@@ -71,7 +71,7 @@ export default async function ProductsPage() {
                       <div>
                         <div className="text-xs text-zinc-400 mb-0.5">Mulai dari</div>
                         <div className="font-medium text-zinc-900">
-                          Rp {Math.min(...product.variants.map((v: any) => Number(v.price) || 0)).toLocaleString('id-ID')}
+                          Rp {Math.min(...product.variants.map((v: any) => v.discount_price ? Number(v.discount_price) : Number(v.price) || 0)).toLocaleString('id-ID')}
                         </div>
                         <div className="text-xs text-zinc-400">{product.variants.length} varian</div>
                       </div>

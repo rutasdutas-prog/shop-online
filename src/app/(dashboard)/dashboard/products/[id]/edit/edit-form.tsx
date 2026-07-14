@@ -307,7 +307,7 @@ export default function EditProductForm({ product, categories = [], error }: { p
                 {/* Foto Varian */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-zinc-600">Foto Varian</label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-5">
                     {v.imageUrl ? (
                       <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-zinc-200 flex-shrink-0">
                         <img src={v.imageUrl} alt="variant" className="w-full h-full object-cover" />
