@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ProductDetailModal from './product-detail-modal'
 import { AddToCartButton } from './add-to-cart-button'
 
@@ -15,6 +15,17 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, store, themeColor, lang, dict, cornerStyle }: ProductCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  useEffect(() => {
+    const handleOpenModal = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      if (detail?.product?.id === product.id) {
+        setIsModalOpen(true)
+      }
+    }
+    window.addEventListener('open-product-modal', handleOpenModal)
+    return () => window.removeEventListener('open-product-modal', handleOpenModal)
+  }, [product.id])
 
   const productVariants: any[] = Array.isArray(product.variants) && product.variants.length > 0 ? product.variants : []
   const hasVariants = productVariants.length > 0

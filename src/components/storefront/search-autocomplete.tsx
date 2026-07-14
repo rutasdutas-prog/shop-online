@@ -95,11 +95,10 @@ export function SearchAutocomplete({ storeId, themeColor }: { storeId: string, t
                 <div 
                   key={product.id}
                   onClick={() => {
-                    // Smooth scroll to product if it's on the page, or handle navigation.
-                    // For now, let's just close it.
                     setOpen(false)
                     setQuery('')
-                    // You can add router.push to a product detail page if you have one.
+                    // Fire a custom event that the storefront page listens to
+                    window.dispatchEvent(new CustomEvent('open-product-modal', { detail: { product } }))
                   }}
                   className="flex items-center gap-4 px-4 py-3 cursor-pointer transition-colors border-b last:border-0"
                   style={{ borderColor: 'rgba(255,255,255,0.06)' }}
