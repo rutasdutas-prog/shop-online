@@ -5,6 +5,7 @@ import { signout } from '@/actions/auth.actions'
 import { getLanguage } from '@/actions/language.actions'
 import { dictionaries } from '@/lib/i18n/dictionaries'
 import { DashboardChatbot } from '@/components/chat/dashboard-chatbot'
+import { requireUser } from '@/lib/dal'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,16 +15,9 @@ export default async function DashboardLayout({
   children: React.ReactNode
 }) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { user, store } = await requireUser()
 
-  if (!user) redirect('/login')
-
-  const { data: store } = await supabase
-    .from('stores')
-    .select('id, name, slug')
-    .eq('owner_id', user.id)
-    .single()
-
+  
   const lang = await getLanguage()
   const dict = dictionaries[lang]
 

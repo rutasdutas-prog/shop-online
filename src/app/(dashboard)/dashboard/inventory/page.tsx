@@ -5,17 +5,15 @@ import { InventoryExportButtons } from '@/components/inventory/inventory-export-
 import { InventoryRow } from '@/components/inventory/inventory-row'
 import { getLanguage } from '@/actions/language.actions'
 import { dictionaries } from '@/lib/i18n/dictionaries'
+import { requireStore } from '@/lib/dal'
 
 export const dynamic = 'force-dynamic'
 
 export default async function InventoryPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const { user, store } = await requireStore()
 
-  const { data: store } = await supabase.from('stores').select('id').eq('owner_id', user.id).single()
-  if (!store) redirect('/dashboard/setup')
-
+  
   const lang = await getLanguage()
   const dict = dictionaries[lang]
 

@@ -1,17 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ExportButtons } from '@/components/export-buttons'
+import { requireStore } from '@/lib/dal'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ReportsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const { user, store } = await requireStore()
 
-  const { data: store } = await supabase.from('stores').select('id').eq('owner_id', user.id).single()
-  if (!store) redirect('/dashboard/setup')
-
+  
   // Ambil data order untuk laporan
   const { data: orders } = await supabase
     .from('orders')

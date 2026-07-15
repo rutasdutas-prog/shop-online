@@ -2,23 +2,16 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { updateAppearance } from '@/actions/appearance.actions'
 import ThemePickerClient from './theme-picker-client'
+import { requireStore } from '@/lib/dal'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AppearancePage(props: { searchParams: Promise<{ error?: string; success?: string }> }) {
   const searchParams = await props.searchParams
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const { user, store } = await requireStore()
 
-  const { data: store } = await supabase
-    .from('stores')
-    .select('id, theme_settings, slug')
-    .eq('owner_id', user.id)
-    .single()
-
-  if (!store) redirect('/dashboard/setup')
-
+  
   const settings = store.theme_settings || {
     theme_name: 'custom',
     theme_color: '#000000',

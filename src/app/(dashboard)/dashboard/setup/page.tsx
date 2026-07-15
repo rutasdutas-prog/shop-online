@@ -3,22 +3,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { requireUser } from '@/lib/dal'
 
 export const dynamic = 'force-dynamic'
 
 export default async function SetupStorePage(props: { searchParams: Promise<{ error?: string }> }) {
   const searchParams = await props.searchParams
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { user, store } = await requireUser()
 
-  if (!user) redirect('/login')
-
-  const { data: store } = await supabase
-    .from('stores')
-    .select('id')
-    .eq('owner_id', user.id)
-    .single()
-
+  
   if (store) redirect('/dashboard')
 
   return (

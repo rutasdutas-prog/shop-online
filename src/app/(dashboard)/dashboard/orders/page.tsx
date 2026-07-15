@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { OrderPdfButton } from '@/components/orders/order-pdf-button'
-
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { redirect } from 'next/navigation'
 import { getLanguage } from '@/actions/language.actions'
 import { dictionaries } from '@/lib/i18n/dictionaries'
 import Link from 'next/link'
+import { requireStore } from '@/lib/dal'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,12 +20,9 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
 
 export default async function OrdersPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const { user, store } = await requireStore()
 
-  const { data: store } = await supabase.from('stores').select('id, name').eq('owner_id', user.id).single()
-  if (!store) redirect('/dashboard/setup')
-
+  
   const lang = await getLanguage()
   const dict = dictionaries[lang]
 

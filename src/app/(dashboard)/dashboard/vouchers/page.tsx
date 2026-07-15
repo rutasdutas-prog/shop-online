@@ -1,17 +1,17 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { requireStore } from '@/lib/dal'
 
 export const dynamic = 'force-dynamic'
 
 async function createVoucher(formData: FormData) {
   'use server'
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { user, store } = await requireStore()
   if (!user) return
 
-  const { data: store } = await supabase.from('stores').select('id').eq('owner_id', user.id).single()
-  if (!store) return
+    if (!store) return
 
   const code = (formData.get('code') as string).toUpperCase().trim()
   const type = formData.get('type') as string
@@ -50,11 +50,9 @@ async function deleteVoucher(formData: FormData) {
 
 export default async function VouchersPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const { user, store } = await requireStore()
 
-  const { data: store } = await supabase.from('stores').select('id').eq('owner_id', user.id).single()
-  const { data: vouchers } = store
+    const { data: vouchers } = store
     ? await supabase.from('vouchers').select('*').eq('store_id', store.id).order('created_at', { ascending: false })
     : { data: [] }
 

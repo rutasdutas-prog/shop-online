@@ -8,6 +8,7 @@ import { dictionaries } from '@/lib/i18n/dictionaries'
 import { LogoUpload } from '@/components/settings/logo-upload'
 import { BannerUpload } from '@/components/settings/banner-upload'
 import { WhatsAppInput } from '@/components/settings/whatsapp-input'
+import { requireStore } from '@/lib/dal'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,17 +17,9 @@ export default async function SettingsPage(props: {
 }) {
   const searchParams = await props.searchParams
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const { user, store } = await requireStore()
 
-  const { data: store } = await supabase
-    .from('stores')
-    .select('*')
-    .eq('owner_id', user.id)
-    .single()
-
-  if (!store) redirect('/dashboard/setup')
-
+  
   const lang = await getLanguage()
   const dict = dictionaries[lang]
 

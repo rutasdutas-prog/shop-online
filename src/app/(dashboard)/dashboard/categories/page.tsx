@@ -1,17 +1,17 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { requireStore } from '@/lib/dal'
 
 export const dynamic = 'force-dynamic'
 
 async function createCategory(formData: FormData) {
   'use server'
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { user, store } = await requireStore()
   if (!user) return
 
-  const { data: store } = await supabase.from('stores').select('id').eq('owner_id', user.id).single()
-  if (!store) return
+    if (!store) return
 
   const name = formData.get('name') as string
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -34,11 +34,9 @@ async function deleteCategory(formData: FormData) {
 
 export default async function CategoriesPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const { user, store } = await requireStore()
 
-  const { data: store } = await supabase.from('stores').select('id').eq('owner_id', user.id).single()
-  const { data: categories } = store
+    const { data: categories } = store
     ? await supabase.from('categories').select('*, products(count)').eq('store_id', store.id).order('name')
     : { data: [] }
 

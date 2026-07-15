@@ -2,16 +2,15 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import KnowledgeForm from './knowledge-form'
+import { requireStore } from '@/lib/dal'
 
 export const dynamic = 'force-dynamic'
 
 export default async function KnowledgePage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const { user, store } = await requireStore()
 
-  const { data: store } = await supabase.from('stores').select('id').eq('owner_id', user.id).single()
-  const { data: knowledge } = store
+    const { data: knowledge } = store
     ? await supabase.from('knowledge_base').select('id, title, content, created_at').eq('store_id', store.id).order('created_at', { ascending: false })
     : { data: [] }
 

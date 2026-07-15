@@ -3,23 +3,15 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getLanguage } from '@/actions/language.actions'
 import { dictionaries } from '@/lib/i18n/dictionaries'
+import { requireStore } from '@/lib/dal'
 
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardOverview() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { user, store } = await requireStore()
 
-  if (!user) redirect('/login')
-
-  const { data: store } = await supabase
-    .from('stores')
-    .select('*')
-    .eq('owner_id', user.id)
-    .single()
-
-  if (!store) redirect('/dashboard/setup')
-
+  
   const lang = await getLanguage()
   const dict = dictionaries[lang]
 
