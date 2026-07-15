@@ -63,6 +63,9 @@ export async function deleteStore(formData: FormData) {
     // 6. Delete categories
     await supabase.from('categories').delete().eq('store_id', storeId)
 
+    // 7. Delete customers
+    await supabase.from('customers').delete().eq('store_id', storeId)
+
     // 7. Finally delete the store itself (slug freed for reuse)
     const { error } = await supabase.from('stores').delete().eq('id', storeId)
     

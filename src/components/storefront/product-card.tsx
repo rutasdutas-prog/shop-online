@@ -82,7 +82,7 @@ export default function ProductCard({ product, store, themeColor, lang, dict, co
         {/* Variant badge */}
         {hasVariants && !isOutOfStock && (
           <div className="absolute top-2 right-2 z-10">
-            <span className="text-[9px] md:text-[10px] font-semibold px-2 py-1 rounded-full backdrop-blur-sm" style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.9)' }}>
+            <span className="text-[9px] md:text-[10px] font-bold px-2 py-1 rounded-full bg-black/60 text-white shadow-sm backdrop-blur-md border border-white/10">
               {productVariants.length} varian
             </span>
           </div>

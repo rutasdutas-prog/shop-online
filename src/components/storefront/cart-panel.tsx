@@ -35,6 +35,8 @@ export function CartPanel({ storeId, themeColor, lang, whatsapp }: CartPanelProp
   const [items, setItems] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(false)
   const [adding, setAdding] = useState(false)
+  const [showAddedAnim, setShowAddedAnim] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [customerName, setCustomerName] = useState('')
   const [customerWa, setCustomerWa] = useState('')
 
@@ -104,7 +106,9 @@ export function CartPanel({ storeId, themeColor, lang, whatsapp }: CartPanelProp
               image
             }]
           })
-          setOpen(true)
+          // setOpen(true) // Hilangkan auto-open
+          setShowAddedAnim(true)
+          setTimeout(() => setShowAddedAnim(false), 2000)
         }
       } finally {
         setAdding(false)
@@ -134,22 +138,45 @@ export function CartPanel({ storeId, themeColor, lang, whatsapp }: CartPanelProp
   const total = items.reduce((s, i) => s + i.price * i.quantity, 0)
   const totalQty = items.reduce((s, i) => s + i.quantity, 0)
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!customerName.trim() || !customerWa.trim()) {
       alert(lang === 'id' ? 'Mohon isi Nama dan No WhatsApp Anda' : 'Please fill in your Name and WhatsApp')
       return
     }
 
-    const text = items.map(i =>
-      `• ${i.name}${i.variant ? ` (${i.variant})` : ''} x${i.quantity} = Rp ${(i.price * i.quantity).toLocaleString('id-ID')}`
-    ).join('\n')
-    const msg = `Halo, saya *${customerName.trim()}* (WA: ${customerWa.trim()}) ingin memesan:\n\n${text}\n\nTotal: *Rp ${total.toLocaleString('id-ID')}*\n\nMohon konfirmasinya ya 🙏`
-    
-    setOpen(false)
-    if (whatsapp) {
-      window.open(`https://wa.me/62${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank')
-    } else {
-      alert(lang === 'id' ? 'Nomor WhatsApp penjual belum diatur.' : 'Seller WhatsApp number is not configured.')
+    setCheckoutLoading(true)
+    try {
+      const sid = getSessionId()
+      const res = await fetch('/api/checkout/draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          store_id: storeId,
+          session_id: sid,
+          customer_name: customerName.trim(),
+          customer_phone: customerWa.trim()
+        })
+      })
+      const data = await res.json()
+      
+      if (!res.ok) {
+        alert(data.error || 'Terjadi kesalahan saat memproses pesanan.')
+        return
+      }
+
+      setOpen(false)
+      if (whatsapp) {
+        window.open(`https://wa.me/62${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(data.summary)}`, '_blank')
+      } else {
+        alert(lang === 'id' ? 'Pesanan berhasil dibuat, namun nomor WhatsApp penjual belum diatur.' : 'Order created, but seller WhatsApp number is not configured.')
+      }
+      
+      // Kosongkan keranjang di frontend
+      setItems([])
+    } catch (err: any) {
+      alert('Terjadi kesalahan koneksi.')
+    } finally {
+      setCheckoutLoading(false)
     }
   }
 
@@ -158,10 +185,15 @@ export function CartPanel({ storeId, themeColor, lang, whatsapp }: CartPanelProp
       {/* Floating Cart Button */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 left-6 z-[90] w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all active:scale-95 hover:scale-105"
+        className={`fixed bottom-6 left-6 z-[90] w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all active:scale-95 ${showAddedAnim ? 'animate-bounce' : 'hover:scale-105'}`}
         style={{ backgroundColor: themeColor }}
         aria-label="Lihat keranjang belanja"
       >
+        {showAddedAnim && (
+          <div className="absolute -top-10 bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap animate-in fade-in slide-in-from-bottom-2">
+            Yuk checkout barangmu! 🛒
+          </div>
+        )}
         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
@@ -295,10 +327,14 @@ export function CartPanel({ storeId, themeColor, lang, whatsapp }: CartPanelProp
 
             <button
               onClick={handleCheckout}
-              className="w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-lg transition-all active:scale-[0.98] hover:opacity-90"
+              disabled={checkoutLoading}
+              className="w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-lg transition-all active:scale-[0.98] hover:opacity-90 disabled:opacity-50"
               style={{ backgroundColor: themeColor }}
             >
-              {lang === 'id' ? '🛒 Pesan Sekarang' : '🛒 Order Now'}
+              {checkoutLoading 
+                ? (lang === 'id' ? 'Memproses...' : 'Processing...') 
+                : (lang === 'id' ? '🛒 Pesan Sekarang' : '🛒 Order Now')
+              }
             </button>
             <button
               onClick={() => setItems([])}

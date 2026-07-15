@@ -45,9 +45,9 @@ export function StoreSortDropdown() {
           backgroundSize: '1.5em 1.5em'
         }}
       >
-        <option value="latest">Paling Baru</option>
-        <option value="price_asc">Harga: Termurah</option>
-        <option value="price_desc">Harga: Termahal</option>
+        <option value="latest" className="text-zinc-900">Paling Baru</option>
+        <option value="price_asc" className="text-zinc-900">Harga: Termurah</option>
+        <option value="price_desc" className="text-zinc-900">Harga: Termahal</option>
       </select>
     </div>
   )
