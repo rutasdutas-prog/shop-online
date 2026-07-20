@@ -1,4 +1,4 @@
-'use client'
+// Lightweight CSS-only animations — no framer-motion overhead for above-the-fold content
 
 import { ReactNode } from 'react'
 

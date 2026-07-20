@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
-export async function GET(request: NextRequest, { params }: { params: { order_number: string } }) {
-  const { order_number } = params;
+export async function GET(request: NextRequest, { params }: { params: Promise<{ order_number: string }> }) {
+  const { order_number } = await params;
   const supabase = await createClient();
 
   const { data: order } = await supabase
@@ -45,10 +45,13 @@ export async function GET(request: NextRequest, { params }: { params: { order_nu
   };
 
   // Header – store name
-  drawText(order.store?.name || 'Toko', margin, { size: 20, font: helveticaBold, align: 'center' });
-  y -= 30;
-  // Invoice number
-  drawText(`Invoice / Bukti Pesanan #${order.order_number}`, margin, { size: 12, font: helvetica, align: 'center' });
+  const textWidth = helveticaBold.widthOfTextAtSize(order.store?.name || 'Invoice', 20);
+  const textX = (page.getWidth() - textWidth) / 2;
+  page.drawText(order.store?.name || 'Invoice', { x: textX, y: height - margin, size: 20, font: helveticaBold });
+  
+  const subTextWidth = helvetica.widthOfTextAtSize(`Invoice #${order.order_number}`, 12);
+  const subTextX = (page.getWidth() - subTextWidth) / 2;
+  page.drawText(`Invoice #${order.order_number}`, { x: subTextX, y: height - margin - 25, size: 12, font: helvetica });
   y -= 30;
 
   // Customer info
