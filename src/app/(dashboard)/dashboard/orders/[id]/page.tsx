@@ -59,7 +59,7 @@ export default async function OrderDetailPage(props: { params: Promise<{ id: str
       {order.customer && (
         <div className="bg-white rounded-xl border border-zinc-100 p-5">
           <h2 className="text-sm font-semibold text-zinc-700 mb-3">Informasi Pembeli</h2>
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <div>
               <p className="text-xs text-zinc-400">Nama</p>
               <p className="font-medium text-zinc-800">{(order.customer as any).name}</p>

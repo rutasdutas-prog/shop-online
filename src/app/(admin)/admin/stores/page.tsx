@@ -14,6 +14,7 @@ export default async function AdminStoresPage() {
   const { data: stores } = await supabase
     .from('stores')
     .select('id, name, slug, status, created_at, logo_url, owner_id')
+    .neq('status', 'SUSPENDED')
     .order('created_at', { ascending: false })
 
   const ownerIds = (stores || []).map(s => s.owner_id).filter(Boolean)

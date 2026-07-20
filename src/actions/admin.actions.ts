@@ -74,15 +74,20 @@ export async function deleteStore(formData: FormData) {
       await supabase.from('chat_sessions').delete().eq('store_id', storeId)
     }
 
-    // 9. Finally delete the store itself (slug freed for reuse)
-    const { error } = await supabase.from('stores').delete().eq('id', storeId)
+    // 9. Soft-delete the store (URL / slug freed for reuse)
+    // Karena RLS mencegah DELETE, kita ubah statusnya jadi SUSPENDED dan bebaskan slug-nya.
+    const { data: storeData } = await supabase.from('stores').select('slug').eq('id', storeId).single()
+    const slug = storeData?.slug || 'unknown'
+    const deletedSlug = `${slug}-deleted-${Date.now()}`
+    const { error } = await supabase.from('stores').update({ status: 'SUSPENDED', slug: deletedSlug }).eq('id', storeId)
     
     if (error) {
-      console.error("Delete store error:", error)
-      throw error
+      console.error('Delete store error:', error)
+      return { success: false, error: 'Gagal menonaktifkan toko: ' + error.message }
     }
 
-    revalidatePath('/', 'layout') // clear all caches including the static store paths
+    revalidatePath('/admin/stores')
+    return { success: true }
   } catch (err: any) {
     console.error("Failed to delete store fully:", err)
     // we can throw or just ignore, but better to log it at least.

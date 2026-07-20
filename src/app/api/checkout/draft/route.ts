@@ -148,11 +148,15 @@ export async function POST(request: Request) {
         .eq('id', voucherData.id)
     }
 
-    // Buat ringkasan untuk AI
+    // Buat ringkasan untuk AI / WhatsApp
     const itemSummary = items.map(i => {
       const prod = i.products as any
       return `  - ${prod?.name || 'Produk'} x${i.quantity} = Rp ${(i.unit_price * i.quantity).toLocaleString('id-ID')}`
     }).join('\n')
+
+    const host = request.headers.get('host') || 'localhost:3000'
+    const protocol = host.includes('localhost') ? 'http' : 'https'
+    const invoiceUrl = `${protocol}://${host}/invoice/${order.order_number}`
 
     const summary = `📋 **Draft Order Berhasil Dibuat!**
 
@@ -164,7 +168,10 @@ ${itemSummary}
 💰 Subtotal: Rp ${subtotal.toLocaleString('id-ID')}${discount > 0 ? `\n🎁 Diskon (${cart.voucher_code}): -Rp ${discount.toLocaleString('id-ID')}` : ''}
 **Total: Rp ${totalAmount.toLocaleString('id-ID')}**
 
-Order ini sudah masuk ke sistem. Tim kami akan segera menghubungi Anda untuk konfirmasi. Anda bisa menghubungi kami via WhatsApp jika ada pertanyaan.`
+📄 **Lihat/Download Bukti Pesanan & PDF:**
+👉 ${invoiceUrl}
+
+Order ini sudah masuk ke sistem. Tim kami akan segera menghubungi Anda untuk konfirmasi.`
 
     return NextResponse.json({
       success: true,
