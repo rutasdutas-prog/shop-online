@@ -19,12 +19,12 @@ export default async function OrdersPage(props: { searchParams: Promise<{ search
 
   let query = supabase
     .from('orders')
-    .select('*, customers(name, phone), order_items(id, quantity, unit_price, subtotal, product:products(name, images, sku))')
+    .select('*, customer:customers(name, phone), order_items(id, quantity, unit_price, subtotal, product:products(name, images, sku))')
     .eq('store_id', store.id)
     .order('created_at', { ascending: false })
 
   if (search) {
-    query = query.or(`order_number.ilike.%${search}%,customers.name.ilike.%${search}%,customers.phone.ilike.%${search}%`)
+    query = query.or(`order_number.ilike.%${search}%,customer.name.ilike.%${search}%,customer.phone.ilike.%${search}%`)
   }
 
   const { data: orders } = await query
@@ -74,8 +74,8 @@ export default async function OrdersPage(props: { searchParams: Promise<{ search
                     return (
                       <tr key={order.id} className="border-b hover:bg-zinc-50 transition-colors">
                         <td className="px-4 py-3 font-medium">{order.order_number}</td>
-                        <td className="px-4 py-3">{(order.customers as any)?.name || 'Guest'}</td>
-                        <td className="px-4 py-3 text-zinc-600">{(order.customers as any)?.phone || '-'}</td>
+                        <td className="px-4 py-3">{(order.customer as any)?.name || 'Guest'}</td>
+                        <td className="px-4 py-3 text-zinc-600">{(order.customer as any)?.phone || '-'}</td>
                         <td className="px-4 py-3 font-semibold">Rp {order.total_amount.toLocaleString('id-ID')}</td>
                         <td className="px-4 py-3">
                           <OrderStatusSelect orderId={order.id} initialStatus={order.status} />

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import ProductDetailModal from './product-detail-modal'
 import { AddToCartButton } from './add-to-cart-button'
 
@@ -48,14 +49,13 @@ export default function ProductCard({ product, store, themeColor, lang, dict, co
   return (
     <>
       <div 
-        className={`group ${cornerStyle} overflow-hidden transition-all duration-500 flex flex-col h-full relative cursor-pointer`}
+        className={`group ${cornerStyle} overflow-hidden transition-all duration-300 flex flex-col h-full relative cursor-pointer`}
         style={{
-          backgroundColor: 'rgba(255,255,255,0.06)',
+          backgroundColor: 'rgba(15,14,25,0.8)',
           border: '1px solid rgba(255,255,255,0.10)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
-          opacity: isOutOfStock ? 0.65 : 1
+          boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+          opacity: isOutOfStock ? 0.65 : 1,
+          willChange: 'transform',
         }}
         onClick={() => setIsModalOpen(true)}
         onMouseEnter={e => {
@@ -99,11 +99,13 @@ export default function ProductCard({ product, store, themeColor, lang, dict, co
         {/* Image */}
         <div className="aspect-[4/5] bg-black/20 relative overflow-hidden">
           {hasImage ? (
-            <img
+            <Image
               src={product.images[0]}
               alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
               loading="lazy"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-white/20 gap-3">

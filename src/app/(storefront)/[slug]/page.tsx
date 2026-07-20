@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { FadeIn, StaggerContainer, StaggerItem } from '@/components/animations'
 import { getLanguage } from '@/actions/language.actions'
 import { dictionaries } from '@/lib/i18n/dictionaries'
@@ -14,7 +15,7 @@ import ProductCard from '@/components/storefront/product-card'
 import { CartPanel } from '@/components/storefront/cart-panel'
 
 export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export const revalidate = 30
 
 export default async function StorefrontPage(
   props: { 
@@ -54,7 +55,7 @@ export default async function StorefrontPage(
 
   let productsQuery = supabase
     .from('products')
-    .select('*')
+    .select('id, name, price, discount_price, images, stock, status, variants, category_id, store_id')
     .eq('store_id', store.id)
     .in('status', ['PUBLISHED', 'ACTIVE'])
 
@@ -104,21 +105,15 @@ export default async function StorefrontPage(
         background: 'linear-gradient(145deg, #08070f 0%, #0d0c1a 50%, #0a0910 100%)'
       } as React.CSSProperties}
     >
-      {/* AMBIENT BACKGROUND ORBS */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div
-          className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] md:w-[50vw] md:h-[50vw] rounded-full opacity-25 blur-[100px]"
-          style={{ background: `radial-gradient(circle, ${gradFrom}, transparent 70%)` }}
-        />
-        <div
-          className="absolute -bottom-[20%] -right-[10%] w-[60vw] h-[60vw] md:w-[40vw] md:h-[40vw] rounded-full opacity-20 blur-[120px]"
-          style={{ background: `radial-gradient(circle, ${gradTo}, transparent 70%)` }}
-        />
-        <div
-          className="absolute top-[40%] left-[30%] w-[40vw] h-[40vw] md:w-[25vw] md:h-[25vw] rounded-full opacity-10 blur-[80px]"
-          style={{ background: `radial-gradient(circle, ${themeColor}, transparent 70%)` }}
-        />
-      </div>
+      {/* AMBIENT BACKGROUND — cheap CSS gradient, no GPU blur */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          background: `radial-gradient(ellipse 80% 60% at 20% 10%, ${gradFrom}50 0%, transparent 60%),
+                       radial-gradient(ellipse 60% 50% at 80% 90%, ${gradTo}40 0%, transparent 60%),
+                       radial-gradient(ellipse 40% 40% at 50% 50%, ${themeColor}15 0%, transparent 70%)`
+        }}
+      />
 
       {/* HERO */}
       <div className="relative z-10 overflow-hidden min-h-[44svh] md:min-h-[60svh] flex flex-col justify-center border-b border-white/5">
@@ -127,7 +122,14 @@ export default async function StorefrontPage(
             {store.banner_url.includes('.mp4') ? (
               <video src={store.banner_url} autoPlay loop muted playsInline className="w-full h-full object-cover opacity-30" />
             ) : (
-              <img src={store.banner_url} alt="" className="w-full h-full object-cover opacity-30" />
+              <Image
+                src={store.banner_url}
+                alt=""
+                fill
+                className="object-cover opacity-30"
+                priority
+                sizes="100vw"
+              />
             )}
             <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, ${gradFrom}cc, ${gradTo}aa, #08070fee)` }} />
           </div>
@@ -146,7 +148,14 @@ export default async function StorefrontPage(
               }}
             >
               {store.logo_url ? (
-                <img src={store.logo_url} alt={store.name} className="w-full h-full object-cover" />
+                <Image
+                  src={store.logo_url}
+                  alt={store.name}
+                  fill
+                  className="object-cover"
+                  priority
+                  sizes="160px"
+                />
               ) : (
                 <span className="text-2xl md:text-5xl font-bold" style={{ color: themeColor }}>{store.name.charAt(0).toUpperCase()}</span>
               )}

@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { OrderPdfButton } from '@/components/orders/order-pdf-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,7 +46,9 @@ export default async function InvoicePage(props: { params: Promise<{ order_numbe
             <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusInfo.color}`}>
               {statusInfo.label}
             </span>
-            <OrderPdfButton order={order as any} storeName={store?.name || 'Toko'} />
+            <Link href={`/api/invoice/${order.order_number}`} target="_blank" rel="noopener noreferrer" className="inline-block bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded">
+              Download PDF
+            </Link>
           </div>
         </div>
 

@@ -1,50 +1,33 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { ReactNode } from 'react'
 
+// Lightweight CSS-only animations — no framer-motion overhead for above-the-fold content
 export function FadeIn({ children, delay = 0, className = '' }: { children: ReactNode, delay?: number, className?: string }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay, ease: 'easeOut' }}
+    <div
       className={className}
+      style={{
+        animation: `fadeInUp 0.4s ease-out ${delay}s both`,
+      }}
     >
       {children}
-    </motion.div>
+    </div>
   )
 }
 
+// No stagger delay — all items appear together for better LCP
 export function StaggerContainer({ children, className = '' }: { children: ReactNode, className?: string }) {
-  return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={{
-        visible: {
-          transition: {
-            staggerChildren: 0.1
-          }
-        }
-      }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  )
+  return <div className={className}>{children}</div>
 }
 
 export function StaggerItem({ children, className = '' }: { children: ReactNode, className?: string }) {
   return (
-    <motion.div
-      variants={{
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } }
-      }}
+    <div
       className={className}
+      style={{ animation: 'fadeInUp 0.3s ease-out both' }}
     >
       {children}
-    </motion.div>
+    </div>
   )
 }

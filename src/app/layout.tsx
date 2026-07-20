@@ -7,6 +7,7 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -28,6 +29,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" className={`${inter.variable} h-full antialiased`}>
+      <head>
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://ieobmwbcvnsnaculmvnu.supabase.co" />
+        <link rel="preconnect" href="https://ieobmwbcvnsnaculmvnu.supabase.co" />
+      </head>
       <body className="min-h-full flex flex-col font-[--font-inter]">
         {children}
         <SpeedInsights />

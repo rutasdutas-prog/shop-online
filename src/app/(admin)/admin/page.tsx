@@ -103,19 +103,13 @@ export default async function AdminOverviewPage() {
                     {store.status === 'ACTIVE' ? 'Aktif' : 'Suspend'}
                   </button>
                 </form>
-                <form action={async () => {
+                <form action={async (fd) => {
                   'use server'
-                  const supabase = await createClient()
-                  await supabase.from('stores').delete().eq('id', store.id)
-                  // Delete user as well if needed? User is handled separately usually.
-                  // Wait, deleting store is enough for "remove store".
+                  const { deleteStore } = await import('@/actions/admin.actions')
+                  await deleteStore(fd)
                 }}>
-                  <button formAction={async () => {
-                     'use server'
-                     const supabase = await createClient()
-                     await supabase.from('stores').delete().eq('id', store.id)
-                     revalidatePath('/admin')
-                  }} type="submit" className="text-xs text-red-400/50 hover:text-red-400 transition-colors" title="Hapus Toko">
+                  <input type="hidden" name="store_id" value={store.id} />
+                  <button type="submit" className="text-xs text-red-400/50 hover:text-red-400 transition-colors" title="Hapus Toko">
                     Hapus
                   </button>
                 </form>
