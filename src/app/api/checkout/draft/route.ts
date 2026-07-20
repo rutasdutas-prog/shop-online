@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 // POST /api/checkout/draft — Buat draft order dari cart
 export async function POST(request: Request) {
   try {
-    const { store_id, session_id, customer_name, customer_phone, customer_address, notes } = await request.json()
+    const { store_id, session_id, customer_name, customer_phone, customer_address, notes, items: frontendItems } = await request.json()
     const supabase = await createClient()
 
     // Ambil cart
@@ -19,7 +19,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Cart kosong atau tidak ditemukan.' }, { status: 404 })
     }
 
-    // Ambil items
+    // Gunakan item dari frontend jika ada (karena state lokal mungkin beda dengan DB)
+    if (frontendItems && Array.isArray(frontendItems)) {
+      // Sync DB cart_items
+      await supabase.from('cart_items').delete().eq('cart_id', cart.id)
+      if (frontendItems.length > 0) {
+        await supabase.from('cart_items').insert(
+          frontendItems.map(item => ({
+            cart_id: cart.id,
+            product_id: item.id.replace(item.variant || '', ''), // ID produk asli
+            quantity: item.quantity,
+            unit_price: item.price
+          }))
+        )
+      }
+    }
+
+    // Ambil items dari DB (sekarang sudah tersinkronisasi)
     const { data: items } = await supabase
       .from('cart_items')
       .select('quantity, unit_price, product_id, products(name, sku)')

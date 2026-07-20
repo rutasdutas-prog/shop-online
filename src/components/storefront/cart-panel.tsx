@@ -154,7 +154,8 @@ export function CartPanel({ storeId, themeColor, lang, whatsapp }: CartPanelProp
           store_id: storeId,
           session_id: sid,
           customer_name: customerName.trim(),
-          customer_phone: customerWa.trim()
+          customer_phone: customerWa.trim(),
+          items: items
         })
       })
       const data = await res.json()

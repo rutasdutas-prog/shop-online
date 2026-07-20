@@ -66,7 +66,15 @@ export async function deleteStore(formData: FormData) {
     // 7. Delete customers
     await supabase.from('customers').delete().eq('store_id', storeId)
 
-    // 7. Finally delete the store itself (slug freed for reuse)
+    // 8. Delete chat sessions
+    const { data: sessions } = await supabase.from('chat_sessions').select('id').eq('store_id', storeId)
+    if (sessions && sessions.length > 0) {
+      const sessionIds = sessions.map(s => s.id)
+      await supabase.from('chat_messages').delete().in('session_id', sessionIds)
+      await supabase.from('chat_sessions').delete().eq('store_id', storeId)
+    }
+
+    // 9. Finally delete the store itself (slug freed for reuse)
     const { error } = await supabase.from('stores').delete().eq('id', storeId)
     
     if (error) {
