@@ -1,8 +1,16 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+
+const getAdminClient = () => {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 async function assertSuperAdmin() {
   const supabase = await createClient()
@@ -24,62 +32,67 @@ export async function toggleStoreStatus(formData: FormData) {
 }
 
 export async function deleteStore(formData: FormData) {
-  const supabase = await assertSuperAdmin()
+  await assertSuperAdmin()
   const storeId = formData.get('store_id') as string
+
+  // Use service role to bypass RLS for destructive cross-user operations
+  const adminDb = getAdminClient()
 
   try {
     // 1. Delete cart items via carts
-    const { data: carts } = await supabase.from('carts').select('id').eq('store_id', storeId)
+    const { data: carts } = await adminDb.from('carts').select('id').eq('store_id', storeId)
     if (carts && carts.length > 0) {
       const cartIds = carts.map(c => c.id)
-      await supabase.from('cart_items').delete().in('cart_id', cartIds)
+      await adminDb.from('cart_items').delete().in('cart_id', cartIds)
     }
-    await supabase.from('carts').delete().eq('store_id', storeId)
+    await adminDb.from('carts').delete().eq('store_id', storeId)
 
     // 2. Delete orders and order items
-    const { data: orders } = await supabase.from('orders').select('id').eq('store_id', storeId)
+    const { data: orders } = await adminDb.from('orders').select('id').eq('store_id', storeId)
     if (orders && orders.length > 0) {
       const orderIds = orders.map(o => o.id)
-      await supabase.from('order_items').delete().in('order_id', orderIds)
+      await adminDb.from('order_items').delete().in('order_id', orderIds)
     }
-    await supabase.from('orders').delete().eq('store_id', storeId)
+    await adminDb.from('orders').delete().eq('store_id', storeId)
 
     // 3. Delete vouchers
-    await supabase.from('vouchers').delete().eq('store_id', storeId)
+    await adminDb.from('vouchers').delete().eq('store_id', storeId)
 
     // 4. Delete knowledge base
-    await supabase.from('knowledge_base').delete().eq('store_id', storeId)
+    await adminDb.from('knowledge_base').delete().eq('store_id', storeId)
 
     // 5. Delete products, inventory, and inventory_histories
-    await supabase.from('inventory_histories').delete().eq('store_id', storeId)
+    await adminDb.from('inventory_histories').delete().eq('store_id', storeId)
     
-    const { data: products } = await supabase.from('products').select('id').eq('store_id', storeId)
+    const { data: products } = await adminDb.from('products').select('id').eq('store_id', storeId)
     if (products && products.length > 0) {
       const productIds = products.map(p => p.id)
-      await supabase.from('inventory').delete().in('product_id', productIds)
+      await adminDb.from('inventory').delete().in('product_id', productIds)
     }
-    await supabase.from('products').delete().eq('store_id', storeId)
+    await adminDb.from('products').delete().eq('store_id', storeId)
 
     // 6. Delete categories
-    await supabase.from('categories').delete().eq('store_id', storeId)
+    await adminDb.from('categories').delete().eq('store_id', storeId)
 
     // 7. Delete customers
-    await supabase.from('customers').delete().eq('store_id', storeId)
+    await adminDb.from('customers').delete().eq('store_id', storeId)
 
     // 8. Delete chat sessions
-    const { data: sessions } = await supabase.from('chat_sessions').select('id').eq('store_id', storeId)
+    const { data: sessions } = await adminDb.from('chat_sessions').select('id').eq('store_id', storeId)
     if (sessions && sessions.length > 0) {
       const sessionIds = sessions.map(s => s.id)
-      await supabase.from('chat_messages').delete().in('session_id', sessionIds)
-      await supabase.from('chat_sessions').delete().eq('store_id', storeId)
+      await adminDb.from('chat_messages').delete().in('session_id', sessionIds)
+      await adminDb.from('chat_sessions').delete().eq('store_id', storeId)
     }
 
     // 9. Soft-delete the store (URL / slug freed for reuse)
     // Karena RLS mencegah DELETE, kita ubah statusnya jadi SUSPENDED dan bebaskan slug-nya.
-    const { data: storeData } = await supabase.from('stores').select('slug').eq('id', storeId).single()
+    const { data: storeData } = await adminDb.from('stores').select('slug').eq('id', storeId).single()
     const slug = storeData?.slug || 'unknown'
     const deletedSlug = `${slug}-deleted-${Date.now()}`
-    const { error } = await supabase.from('stores').update({ status: 'SUSPENDED', slug: deletedSlug }).eq('id', storeId)
+    
+    // Using adminDb for update ensures it bypasses any RLS UPDATE restrictions
+    const { error } = await adminDb.from('stores').update({ status: 'SUSPENDED', slug: deletedSlug }).eq('id', storeId)
     
     if (error) {
       console.error('Delete store error:', error)

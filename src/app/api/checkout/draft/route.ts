@@ -157,21 +157,25 @@ export async function POST(request: Request) {
     const host = request.headers.get('host') || 'localhost:3000'
     const protocol = host.includes('localhost') ? 'http' : 'https'
     const invoiceUrl = `${protocol}://${host}/invoice/${order.order_number}`
+    const pdfUrl = `${protocol}://${host}/api/invoice/${order.order_number}`
 
-    const summary = `📋 **Draft Order Berhasil Dibuat!**
+    const summary = `Halo, saya ingin melakukan pemesanan:
 
-🔖 No. Order: **${order.order_number}**
-${customer_name ? `👤 Nama: ${customer_name}\n` : ''}${customer_phone ? `📱 HP: ${customer_phone}\n` : ''}
-**Detail Pesanan:**
+🔖 *No. Order:* ${order.order_number}
+${customer_name ? `👤 *Nama:* ${customer_name}\n` : ''}${customer_phone ? `📱 *HP:* ${customer_phone}\n` : ''}
+*Detail Pesanan:*
 ${itemSummary}
 
 💰 Subtotal: Rp ${subtotal.toLocaleString('id-ID')}${discount > 0 ? `\n🎁 Diskon (${cart.voucher_code}): -Rp ${discount.toLocaleString('id-ID')}` : ''}
-**Total: Rp ${totalAmount.toLocaleString('id-ID')}**
+*Total Pembayaran: Rp ${totalAmount.toLocaleString('id-ID')}*
 
-📄 **Lihat/Download Bukti Pesanan & PDF:**
-👉 ${invoiceUrl}
+📄 *Lihat Invoice Online:*
+${invoiceUrl}
 
-Order ini sudah masuk ke sistem. Tim kami akan segera menghubungi Anda untuk konfirmasi.`
+📥 *Download PDF Invoice:*
+${pdfUrl}
+
+Mohon informasi untuk proses pembayaran selanjutnya. Terima kasih!`
 
     return NextResponse.json({
       success: true,

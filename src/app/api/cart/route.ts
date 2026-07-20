@@ -4,6 +4,8 @@ import { NextResponse } from 'next/server'
 // GET /api/cart?store_id=xxx&session_id=xxx — Ambil isi cart
 // POST /api/cart — Buat atau reset cart
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -33,6 +35,7 @@ export async function GET(request: Request) {
         id,
         quantity,
         unit_price,
+        variant_name,
         products (id, name, sku, images)
       `)
       .eq('cart_id', cart.id)

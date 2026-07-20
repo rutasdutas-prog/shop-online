@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
   try {
-    const { store_id, session_id, product_id, quantity = 1 } = await request.json()
+    const { store_id, session_id, product_id, variant_name = null, quantity = 1 } = await request.json()
 
     if (!store_id || !session_id || !product_id) {
       return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 })
@@ -48,6 +48,38 @@ export async function POST(request: Request) {
       .select('id')
       .single()
 
+    // Function to handle the actual item insertion/increment
+    const processCartItem = async (cartId: string) => {
+      // 1. Cek apakah item dengan product_id & variant_name yang sama sudah ada di keranjang ini
+      const { data: existingItem } = await supabase
+        .from('cart_items')
+        .select('id, quantity')
+        .eq('cart_id', cartId)
+        .eq('product_id', product_id)
+        .is('variant_name', variant_name) // works for both null and string
+        .single()
+
+      if (existingItem) {
+        // Increment quantity
+        const newQty = existingItem.quantity + quantity
+        await supabase
+          .from('cart_items')
+          .update({ quantity: newQty, unit_price: unitPrice })
+          .eq('id', existingItem.id)
+      } else {
+        // Insert new
+        await supabase
+          .from('cart_items')
+          .insert({
+            cart_id: cartId,
+            product_id,
+            variant_name,
+            quantity,
+            unit_price: unitPrice
+          })
+      }
+    }
+
     if (cartError || !cart) {
       // Coba ambil cart yang sudah ada
       const { data: existingCart } = await supabase
@@ -61,24 +93,11 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Gagal membuat cart' }, { status: 500 })
       }
 
-      // Upsert item
-      await supabase.from('cart_items').upsert({
-        cart_id: existingCart.id,
-        product_id,
-        quantity,
-        unit_price: unitPrice
-      }, { onConflict: 'cart_id,product_id' })
-
+      await processCartItem(existingCart.id)
       return NextResponse.json({ success: true, product_name: product.name })
     }
 
-    // Upsert item ke cart
-    await supabase.from('cart_items').upsert({
-      cart_id: cart.id,
-      product_id,
-      quantity,
-      unit_price: unitPrice
-    }, { onConflict: 'cart_id,product_id' })
+    await processCartItem(cart.id)
 
     return NextResponse.json({ success: true, product_name: product.name })
   } catch (err: any) {
