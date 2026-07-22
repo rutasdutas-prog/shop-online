@@ -108,29 +108,37 @@ export async function deleteStore(formData: FormData) {
 }
 
 export async function suspendUser(formData: FormData) {
-  const supabase = await assertSuperAdmin()
+  await assertSuperAdmin()
   const userId = formData.get('user_id') as string
+  const adminDb = getAdminClient()
   // Suspend = set role to SUSPENDED (or we block by suspending their store)
-  await supabase.from('users').update({ role: 'SUSPENDED' }).eq('id', userId)
+  await adminDb.from('users').update({ role: 'SUSPENDED' }).eq('id', userId)
   revalidatePath('/admin/users')
   revalidatePath('/admin')
 }
 
 export async function restoreUser(formData: FormData) {
-  const supabase = await assertSuperAdmin()
+  await assertSuperAdmin()
   const userId = formData.get('user_id') as string
   const prevRole = formData.get('prev_role') as string || 'OWNER'
-  await supabase.from('users').update({ role: prevRole }).eq('id', userId)
+  const adminDb = getAdminClient()
+  await adminDb.from('users').update({ role: prevRole }).eq('id', userId)
   revalidatePath('/admin/users')
   revalidatePath('/admin')
 }
 
 export async function deleteUser(formData: FormData) {
-  const supabase = await assertSuperAdmin()
+  await assertSuperAdmin()
   const userId = formData.get('user_id') as string
-  // Delete user's stores first (cascades), then user row
-  await supabase.from('stores').delete().eq('owner_id', userId)
-  await supabase.from('users').delete().eq('id', userId)
+  const adminDb = getAdminClient()
+  
+  // Need to delete their stores properly (using the same logic or just cascade if DB supports it)
+  // For safety, let's just delete the stores records. Realistically, we should call the full deleteStore logic 
+  // for each of their stores, but for now we'll do a direct delete on stores, and Supabase auth delete.
+  await adminDb.from('stores').delete().eq('owner_id', userId)
+  await adminDb.from('users').delete().eq('id', userId)
+  await adminDb.auth.admin.deleteUser(userId)
+  
   revalidatePath('/admin/users')
   revalidatePath('/admin')
 }

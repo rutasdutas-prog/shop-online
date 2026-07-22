@@ -174,6 +174,9 @@ export function CartPanel({ storeId, themeColor, lang, whatsapp }: CartPanelProp
       
       // Kosongkan keranjang di frontend
       setItems([])
+      
+      // Redirect ke halaman invoice online
+      window.location.href = `/invoice/${data.order_number}`
     } catch (err: any) {
       alert('Terjadi kesalahan koneksi.')
     } finally {
