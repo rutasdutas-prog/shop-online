@@ -24,8 +24,16 @@ export default function ProductCard({ product, store, themeColor, lang, dict, co
         setIsModalOpen(true)
       }
     }
+    // Close this modal when another product is clicked
+    const handleCloseAll = () => {
+      setIsModalOpen(false)
+    }
     window.addEventListener('open-product-modal', handleOpenModal)
-    return () => window.removeEventListener('open-product-modal', handleOpenModal)
+    window.addEventListener('close-all-product-modals', handleCloseAll)
+    return () => {
+      window.removeEventListener('open-product-modal', handleOpenModal)
+      window.removeEventListener('close-all-product-modals', handleCloseAll)
+    }
   }, [product.id])
 
   const productVariants: any[] = Array.isArray(product.variants) && product.variants.length > 0 ? product.variants : []
@@ -57,7 +65,12 @@ export default function ProductCard({ product, store, themeColor, lang, dict, co
           opacity: isOutOfStock ? 0.65 : 1,
           willChange: 'transform',
         }}
-        onClick={() => setIsModalOpen(true)}
+        onClick={() => {
+          // Close any other open modals first
+          window.dispatchEvent(new CustomEvent('close-all-product-modals'))
+          // Then open this one (React batches these state updates)
+          setTimeout(() => setIsModalOpen(true), 0)
+        }}
         onMouseEnter={e => {
           const el = e.currentTarget as HTMLElement
           el.style.borderColor = `${themeColor}50`
@@ -142,7 +155,11 @@ export default function ProductCard({ product, store, themeColor, lang, dict, co
             </div>
             
             {/* CTA Button */}
-            <div onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}>
+            <div onClick={(e) => {
+              e.stopPropagation()
+              window.dispatchEvent(new CustomEvent('close-all-product-modals'))
+              setTimeout(() => setIsModalOpen(true), 0)
+            }}>
               {hasVariants ? (
                 <button 
                   className="w-full flex items-center justify-center gap-1.5 text-white text-[11px] md:text-sm font-semibold py-2 md:py-2.5 rounded-xl transition-all active:scale-95"
