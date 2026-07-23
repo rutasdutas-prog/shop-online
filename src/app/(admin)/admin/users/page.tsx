@@ -1,16 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { getAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { UsersTable } from '@/components/admin/users-table'
 
 export const dynamic = 'force-dynamic'
-
-const getAdminClient = () => {
-  return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-}
 
 export default async function AdminUsersPage() {
   const supabase = await createClient()

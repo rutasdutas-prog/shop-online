@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { OrdersTable } from '@/components/admin/orders-table'
 
@@ -11,15 +12,17 @@ export default async function AdminOrdersPage() {
   const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
   if (!profile || profile.role !== 'SUPER_ADMIN') redirect('/dashboard')
 
+  const adminDb = getAdminClient()
+
   // Fetch all orders with store info
-  const { data: orders } = await supabase
+  const { data: orders } = await adminDb
     .from('orders')
     .select('id, order_number, status, total_amount, created_at, store_id, customer_id')
     .order('created_at', { ascending: false })
 
   // Fetch all stores
   const storeIds = [...new Set((orders || []).map(o => o.store_id))]
-  const { data: stores } = await supabase
+  const { data: stores } = await adminDb
     .from('stores')
     .select('id, name, slug')
     .in('id', storeIds.length > 0 ? storeIds : [''])
@@ -28,14 +31,14 @@ export default async function AdminOrdersPage() {
 
   // Fetch order items
   const orderIds = (orders || []).map(o => o.id)
-  const { data: orderItems } = await supabase
+  const { data: orderItems } = await adminDb
     .from('order_items')
     .select('id, order_id, quantity, unit_price, subtotal, product_id')
     .in('order_id', orderIds.length > 0 ? orderIds : [''])
 
   // Fetch products for item names
   const productIds = [...new Set((orderItems || []).map(i => i.product_id).filter(Boolean))]
-  const { data: products } = await supabase
+  const { data: products } = await adminDb
     .from('products')
     .select('id, name')
     .in('id', productIds.length > 0 ? productIds : [''])
@@ -44,7 +47,7 @@ export default async function AdminOrdersPage() {
 
   // Fetch customers
   const customerIds = [...new Set((orders || []).map(o => o.customer_id).filter(Boolean))]
-  const { data: customers } = await supabase
+  const { data: customers } = await adminDb
     .from('customers')
     .select('id, name')
     .in('id', customerIds.length > 0 ? customerIds : [''])

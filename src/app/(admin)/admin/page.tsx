@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { toggleStoreStatus } from '@/actions/admin.actions'
@@ -14,6 +15,8 @@ export default async function AdminOverviewPage() {
   const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
   if (!profile || profile.role !== 'SUPER_ADMIN') redirect('/dashboard')
 
+  const adminDb = getAdminClient()
+
   // Fetch platform stats
   const [
     { count: totalStores },
@@ -22,15 +25,15 @@ export default async function AdminOverviewPage() {
     { count: totalOrders },
     { count: totalProducts },
   ] = await Promise.all([
-    supabase.from('stores').select('*', { count: 'exact', head: true }),
-    supabase.from('stores').select('*', { count: 'exact', head: true }).eq('status', 'ACTIVE'),
-    supabase.from('users').select('*', { count: 'exact', head: true }),
-    supabase.from('orders').select('*', { count: 'exact', head: true }),
-    supabase.from('products').select('*', { count: 'exact', head: true }),
+    adminDb.from('stores').select('*', { count: 'exact', head: true }),
+    adminDb.from('stores').select('*', { count: 'exact', head: true }).eq('status', 'ACTIVE'),
+    adminDb.from('users').select('*', { count: 'exact', head: true }),
+    adminDb.from('orders').select('*', { count: 'exact', head: true }),
+    adminDb.from('products').select('*', { count: 'exact', head: true }),
   ])
 
   // Recent stores
-  const { data: recentStores } = await supabase
+  const { data: recentStores } = await adminDb
     .from('stores')
     .select('id, name, slug, status, created_at, owner_id')
     .order('created_at', { ascending: false })

@@ -1,16 +1,9 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { getAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-
-const getAdminClient = () => {
-  return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-}
 
 async function assertSuperAdmin() {
   const supabase = await createClient()
@@ -22,11 +15,14 @@ async function assertSuperAdmin() {
 }
 
 export async function toggleStoreStatus(formData: FormData) {
-  const supabase = await assertSuperAdmin()
+  await assertSuperAdmin()
   const storeId = formData.get('store_id') as string
   const currentStatus = formData.get('current_status') as string
   const newStatus = currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE'
-  await supabase.from('stores').update({ status: newStatus }).eq('id', storeId)
+  
+  const adminDb = getAdminClient()
+  await adminDb.from('stores').update({ status: newStatus }).eq('id', storeId)
+  
   revalidatePath('/admin/stores')
   revalidatePath('/admin')
 }
