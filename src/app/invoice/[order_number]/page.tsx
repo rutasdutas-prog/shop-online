@@ -24,7 +24,7 @@ export default async function InvoicePage(props: { params: Promise<{ order_numbe
   const { order_number } = await props.params
   const adminDb = getAdminClient()
 
-  const { data: order } = await adminDb
+  const { data: order, error } = await adminDb
     .from('orders')
     .select(`
       *,
@@ -35,7 +35,17 @@ export default async function InvoicePage(props: { params: Promise<{ order_numbe
     .eq('order_number', order_number)
     .single()
 
-  if (!order) notFound()
+  if (error) {
+    console.error('Invoice fetch error:', error)
+  }
+
+  if (!order) {
+    // Return the actual error message to the page for debugging
+    if (error) {
+       return <div className="p-8 text-red-500">Error fetching order: {error.message}</div>
+    }
+    notFound()
+  }
 
   const statusInfo = STATUS_MAP[order.status] || { label: order.status, color: 'bg-zinc-100 text-zinc-700' }
   const store = order.store as any

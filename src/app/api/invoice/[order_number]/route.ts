@@ -13,7 +13,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { order_number } = await params;
   const adminDb = getAdminClient();
 
-  const { data: order } = await adminDb
+  const { data: order, error } = await adminDb
     .from('orders')
     .select(`
       *,
@@ -24,7 +24,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     .eq('order_number', order_number)
     .single();
 
+  if (error) {
+    console.error('Invoice API fetch error:', error);
+  }
+
   if (!order) {
+    if (error) {
+      return new NextResponse(`Error fetching order: ${error.message}`, { status: 500 });
+    }
     return new NextResponse('Order not found', { status: 404 });
   }
 
