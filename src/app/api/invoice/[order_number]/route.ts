@@ -12,8 +12,17 @@ const getAdminClient = () => {
 export async function GET(request: NextRequest, { params }: { params: Promise<{ order_number: string }> }) {
   const { order_number } = await params;
   const adminDb = getAdminClient();
+  
+  // Fallback to anon client if service role key is not set
+  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY ? adminDb : createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
-  const { data: order, error } = await adminDb
+  // Set CORS headers for PDF download
+  const headers = new Headers();
+  headers.set('Content-Type', 'application/pdf');
+  headers.set('Cache-Control', 'no-store');
+  headers.set('Access-Control-Allow-Origin', '*');
+
+  const { data: order, error } = await supabase
     .from('orders')
     .select(`
       *,
@@ -26,13 +35,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   if (error) {
     console.error('Invoice API fetch error:', error);
+    return new NextResponse(`Error fetching order: ${error.message}`, { status: 500, headers });
   }
 
   if (!order) {
-    if (error) {
-      return new NextResponse(`Error fetching order: ${error.message}`, { status: 500 });
-    }
-    return new NextResponse('Order not found', { status: 404 });
+    return new NextResponse('Order not found', { status: 404, headers });
   }
 
   // Initialize a new PDF document using pdf-lib
