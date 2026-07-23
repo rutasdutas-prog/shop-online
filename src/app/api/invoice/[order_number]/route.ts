@@ -32,57 +32,122 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-  const drawText = (text: string, x: number, options?: { size?: number; font?: any; align?: 'left' | 'right' }) => {
-    const size = options?.size ?? 12;
+  // Colors
+  const primaryColor = rgb(0.1, 0.15, 0.25); // Dark blue
+  const secondaryColor = rgb(0.4, 0.45, 0.5); // Grayish
+  const lightBg = rgb(0.95, 0.96, 0.98); // Light gray for headers
+  const lineColor = rgb(0.85, 0.85, 0.88); // Light border
+
+  const drawText = (text: string, x: number, options?: { size?: number; font?: any; align?: 'left' | 'right' | 'center'; color?: any }) => {
+    const size = options?.size ?? 10;
     const font = options?.font ?? helvetica;
     const align = options?.align ?? 'left';
+    const color = options?.color ?? primaryColor;
     let drawX = x;
+    const textWidth = font.widthOfTextAtSize(text, size);
+    
     if (align === 'right') {
-      const textWidth = font.widthOfTextAtSize(text, size);
-      drawX = width - x - textWidth;
+      drawX = x - textWidth;
+    } else if (align === 'center') {
+      drawX = x - (textWidth / 2);
     }
-    page.drawText(text, { x: drawX, y, size, font });
+    page.drawText(text, { x: drawX, y, size, font, color });
   };
 
+  // Header background
+  page.drawRectangle({ x: 0, y: height - 120, width: width, height: 120, color: primaryColor });
+
   // Header – store name
-  const textWidth = helveticaBold.widthOfTextAtSize(order.store?.name || 'Invoice', 20);
-  const textX = (page.getWidth() - textWidth) / 2;
-  page.drawText(order.store?.name || 'Invoice', { x: textX, y: height - margin, size: 20, font: helveticaBold });
-  
-  const subTextWidth = helvetica.widthOfTextAtSize(`Invoice #${order.order_number}`, 12);
-  const subTextX = (page.getWidth() - subTextWidth) / 2;
-  page.drawText(`Invoice #${order.order_number}`, { x: subTextX, y: height - margin - 25, size: 12, font: helvetica });
-  y -= 30;
-
-  // Customer info
-  drawText('Diterbitkan Kepada:', margin, { font: helveticaBold });
-  y -= 15;
-  drawText(order.customer?.name ?? '', margin);
-  y -= 15;
-  drawText(order.customer?.phone ?? '', margin);
-  if (order.customer?.address) { y -= 15; drawText(order.customer.address, margin); }
+  y = height - 50;
+  drawText(order.store?.name || 'Toko Kita', width / 2, { align: 'center', font: helveticaBold, size: 24, color: rgb(1, 1, 1) });
   y -= 25;
+  drawText('INVOICE / BUKTI PESANAN', width / 2, { align: 'center', font: helvetica, size: 10, color: rgb(0.8, 0.85, 0.9) });
+  
+  y -= 60; // Move below header
 
-  // Table header
-  drawText('Produk', margin, { font: helveticaBold });
-  drawText('Harga', margin + 250, { align: 'right', font: helveticaBold });
-  drawText('Qty', margin + 320, { align: 'right', font: helveticaBold });
-  drawText('Subtotal', margin + 380, { align: 'right', font: helveticaBold });
+  // Details Section
+  const invoiceDate = new Date(order.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+  
+  // Left side - Customer
+  drawText('DITERBITKAN KEPADA:', margin, { font: helveticaBold, size: 9, color: secondaryColor });
+  drawText('NOMOR PESANAN:', width - margin, { align: 'right', font: helveticaBold, size: 9, color: secondaryColor });
+  
   y -= 15;
+  drawText(order.customer?.name ?? 'Pelanggan', margin, { font: helveticaBold, size: 12 });
+  drawText(`#${order.order_number}`, width - margin, { align: 'right', font: helveticaBold, size: 12 });
+  
+  y -= 15;
+  drawText(order.customer?.phone ?? '', margin, { font: helvetica, size: 10 });
+  drawText(`Tanggal: ${invoiceDate}`, width - margin, { align: 'right', font: helvetica, size: 10 });
+  
+  if (order.customer?.address) { 
+    y -= 15; 
+    drawText(order.customer.address, margin, { font: helvetica, size: 10 }); 
+  }
+  
+  y -= 40;
+
+  // Table header background
+  page.drawRectangle({ x: margin, y: y - 8, width: width - (margin * 2), height: 25, color: lightBg });
+  
+  // Table header
+  const colProduk = margin + 10;
+  const colHarga = width - margin - 150;
+  const colQty = width - margin - 90;
+  const colSubtotal = width - margin - 10;
+
+  drawText('PRODUK', colProduk, { font: helveticaBold, size: 9, color: secondaryColor });
+  drawText('HARGA', colHarga, { align: 'right', font: helveticaBold, size: 9, color: secondaryColor });
+  drawText('QTY', colQty, { align: 'right', font: helveticaBold, size: 9, color: secondaryColor });
+  drawText('SUBTOTAL', colSubtotal, { align: 'right', font: helveticaBold, size: 9, color: secondaryColor });
+  
+  y -= 25;
 
   // Items
   (order.order_items || []).forEach((item: any) => {
-    drawText(item.product?.name || 'Produk', margin);
-    drawText(`Rp ${item.unit_price.toLocaleString('id-ID')}`, margin + 250, { align: 'right' });
-    drawText(`${item.quantity}`, margin + 320, { align: 'right' });
-    drawText(`Rp ${item.subtotal.toLocaleString('id-ID')}`, margin + 380, { align: 'right' });
+    const isLongName = item.product?.name && item.product.name.length > 35;
+    const displayProductName = isLongName ? item.product.name.substring(0, 35) + '...' : (item.product?.name || 'Produk');
+    
+    drawText(displayProductName, colProduk, { font: helveticaBold, size: 10 });
+    drawText(`Rp ${item.unit_price.toLocaleString('id-ID')}`, colHarga, { align: 'right', size: 10 });
+    drawText(`${item.quantity}`, colQty, { align: 'right', size: 10 });
+    drawText(`Rp ${item.subtotal.toLocaleString('id-ID')}`, colSubtotal, { align: 'right', font: helveticaBold, size: 10 });
+    
+    if (item.product?.sku) {
+        y -= 12;
+        drawText(`SKU: ${item.product.sku}`, colProduk, { font: helvetica, size: 8, color: secondaryColor });
+    }
+    
+    y -= 15;
+    page.drawLine({
+      start: { x: margin, y: y + 5 },
+      end: { x: width - margin, y: y + 5 },
+      thickness: 1,
+      color: lineColor,
+    });
     y -= 15;
   });
-  y -= 15;
 
-  // Total
-  drawText('Total', margin + 320, { align: 'right', font: helveticaBold });
-  drawText(`Rp ${order.total_amount.toLocaleString('id-ID')}`, margin + 380, { align: 'right', font: helveticaBold });
+  // Total Section
+  y -= 10;
+  page.drawRectangle({ x: width - margin - 220, y: y - 10, width: 220, height: 35, color: lightBg });
+  
+  drawText('TOTAL PEMBAYARAN', width - margin - 120, { align: 'right', font: helveticaBold, size: 10, color: secondaryColor });
+  drawText(`Rp ${order.total_amount.toLocaleString('id-ID')}`, colSubtotal, { align: 'right', font: helveticaBold, size: 14 });
+
+  // Footer
+  y = 80;
+  page.drawLine({
+    start: { x: margin, y },
+    end: { x: width - margin, y },
+    thickness: 1,
+    color: lineColor,
+  });
+  
+  y -= 20;
+  drawText(`Terima kasih telah berbelanja di ${order.store?.name || 'Toko Kita'}!`, width / 2, { align: 'center', font: helvetica, size: 10, color: secondaryColor });
+  y -= 15;
+  drawText('Invoice ini sah dan diproses secara komputerisasi.', width / 2, { align: 'center', font: helvetica, size: 9, color: secondaryColor });
 
   // Finalize PDF
   const pdfBytes = await pdfDoc.save();

@@ -245,7 +245,7 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
                 <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.40)' }}>
                   {lang === 'id' ? 'Pilih Varian' : 'Select Variant'}
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col gap-2.5">
                   {productVariants.map((v, idx) => {
                     const outOfStock = v.stock <= 0
                     const isSelected = selectedVariant === idx
@@ -255,9 +255,9 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
                         type="button"
                         onClick={() => !outOfStock && handleSelectVariant(idx)}
                         disabled={outOfStock}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-sm font-medium transition-all ${
+                        className={`flex items-center w-full gap-3 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
                           isSelected
-                            ? 'border-white bg-white/15 text-white shadow-lg scale-[1.03]'
+                            ? 'border-white bg-white/15 text-white shadow-lg'
                             : outOfStock
                             ? 'text-white/20 cursor-not-allowed'
                             : 'text-white/70 hover:text-white'

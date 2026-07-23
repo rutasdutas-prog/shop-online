@@ -165,18 +165,19 @@ export function CartPanel({ storeId, themeColor, lang, whatsapp }: CartPanelProp
         return
       }
 
-      setOpen(false)
       if (whatsapp) {
-        window.open(`https://wa.me/62${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(data.summary)}`, '_blank')
+        const waUrl = `https://wa.me/62${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(data.summary)}`
+        // Kosongkan keranjang di frontend
+        setItems([])
+        // Redirect langsung ke WhatsApp
+        window.location.href = waUrl
       } else {
         alert(lang === 'id' ? 'Pesanan berhasil dibuat, namun nomor WhatsApp penjual belum diatur.' : 'Order created, but seller WhatsApp number is not configured.')
+        // Kosongkan keranjang di frontend
+        setItems([])
+        // Jika tidak ada WA, fallback ke halaman invoice
+        window.location.href = `/invoice/${data.order_number}`
       }
-      
-      // Kosongkan keranjang di frontend
-      setItems([])
-      
-      // Redirect ke halaman invoice online
-      window.location.href = `/invoice/${data.order_number}`
     } catch (err: any) {
       alert('Terjadi kesalahan koneksi.')
     } finally {
