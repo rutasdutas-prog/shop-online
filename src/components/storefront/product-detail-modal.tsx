@@ -104,7 +104,7 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity cursor-pointer" onClick={onClose} />
 
       {/* Modal Container */}
-      <div className="relative w-full md:w-auto h-[85vh] md:h-auto md:max-h-[90vh] md:max-w-4xl bg-white md:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in slide-in-from-bottom-10 md:zoom-in-95 duration-200">
+      <div className="relative w-full h-[85vh] md:h-auto md:max-h-[90vh] max-w-full md:max-w-4xl bg-white md:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in slide-in-from-bottom-10 md:zoom-in-95 duration-200" style={{ width: '100%' }}>
         
         {/* Close Button Mobile */}
         <button onClick={onClose} className="md:hidden absolute top-3 right-3 z-50 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-md rounded-full text-zinc-700 shadow-sm border border-zinc-200">
