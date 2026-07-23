@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+
+const getAdminClient = () => {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+};
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ order_number: string }> }) {
   const { order_number } = await params;
-  const supabase = await createClient();
+  const adminDb = getAdminClient();
 
-  const { data: order } = await supabase
+  const { data: order } = await adminDb
     .from('orders')
     .select(`
       *,
