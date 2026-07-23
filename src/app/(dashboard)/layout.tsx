@@ -5,6 +5,7 @@ import { signout } from '@/actions/auth.actions'
 import { getLanguage } from '@/actions/language.actions'
 import { dictionaries } from '@/lib/i18n/dictionaries'
 import { DashboardChatbot } from '@/components/chat/dashboard-chatbot'
+import { AutoRefresh } from '@/components/dashboard/auto-refresh'
 import { requireUser } from '@/lib/dal'
 
 export const dynamic = 'force-dynamic'
@@ -12,6 +13,7 @@ export const dynamic = 'force-dynamic'
 export default async function DashboardLayout({
   children,
 }: {
+
   children: React.ReactNode
 }) {
   const supabase = await createClient()
@@ -126,6 +128,7 @@ export default async function DashboardLayout({
         </main>
       </div>
     </div>
+    <AutoRefresh interval={15000} />
     <DashboardChatbot />
     </>
   )

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AddToCartButton } from './add-to-cart-button'
 
 interface Variant {
   name: string
@@ -25,13 +24,11 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
   const [activeImage, setActiveImage] = useState(0)
   const [selectedVariant, setSelectedVariant] = useState<number | null>(null)
 
-  // Reset when product changes
   useEffect(() => {
     setActiveImage(0)
     setSelectedVariant(null)
   }, [product?.id])
 
-  // Prevent background scrolling
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -46,11 +43,8 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
   const images: string[] = Array.isArray(product.images) && product.images.length > 0 ? product.images : []
   const hasVariants = Array.isArray(product.variants) && product.variants.length > 0
   const productVariants: Variant[] = hasVariants ? product.variants : []
-
-  // Selected variant data
   const activeVariant = selectedVariant !== null ? productVariants[selectedVariant] : null
 
-  // Price calculation
   const minVariantPrice = hasVariants ? Math.min(...productVariants.map(v => v.discount_price ? Number(v.discount_price) : (Number(v.price) || 0))) : 0
   const basePrice = hasVariants
     ? (activeVariant ? Number(activeVariant.price) : minVariantPrice)
@@ -62,13 +56,11 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
   const displayPrice = hasDiscount ? discountPrice! : basePrice
   const percentOff = hasDiscount ? Math.round((1 - displayPrice / basePrice) * 100) : 0
 
-  // Stock
   const stock = hasVariants
     ? (activeVariant ? activeVariant.stock : productVariants.reduce((s, v) => s + (v.stock || 0), 0))
     : (product.stock ?? null)
   const isOutOfStock = stock !== null && stock <= 0
 
-  // Active image — when a variant is selected and has its own image, switch to it
   const displayImage = (() => {
     if (activeVariant?.imageUrl && activeVariant.imageUrl.startsWith('http')) {
       return activeVariant.imageUrl
@@ -79,15 +71,10 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
   const description = product.description || (lang === 'id' ? 'Tidak ada deskripsi.' : 'No description.')
   const descriptionLines = description.split(/\n/)
 
-  // Handle variant selection — also update main image if variant has one
   const handleSelectVariant = (idx: number) => {
     const variant = productVariants[idx]
     if (variant.stock <= 0) return
     setSelectedVariant(idx === selectedVariant ? null : idx)
-    // Switch main image to variant image if exists
-    if (variant.imageUrl && variant.imageUrl.startsWith('http')) {
-      // We'll show the variant image via displayImage logic above
-    }
   }
 
   const handleAddToCart = () => {
@@ -112,86 +99,57 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-6 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-6 sm:p-4 animate-in fade-in duration-200">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity cursor-pointer" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity cursor-pointer" onClick={onClose} />
 
-      {/* Modal */}
-      <div className="relative w-full h-full md:h-auto md:max-h-[90vh] md:max-w-4xl md:rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in zoom-in-95 duration-200" style={{ backgroundColor: '#111120', border: '1px solid rgba(255,255,255,0.10)' }}>
-
-        {/* Close Mobile */}
-        <button onClick={onClose} className="md:hidden absolute top-4 right-4 z-50 w-8 h-8 flex items-center justify-center backdrop-blur-md rounded-full text-white shadow-sm" style={{ backgroundColor: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.20)' }}>
+      {/* Modal Container */}
+      <div className="relative w-full md:w-auto h-[85vh] md:h-auto md:max-h-[90vh] md:max-w-4xl bg-white md:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in slide-in-from-bottom-10 md:zoom-in-95 duration-200">
+        
+        {/* Close Button Mobile */}
+        <button onClick={onClose} className="md:hidden absolute top-3 right-3 z-50 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-md rounded-full text-zinc-700 shadow-sm border border-zinc-200">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
 
-        {/* Close Desktop */}
-        <button onClick={onClose} className="hidden md:flex absolute top-4 right-4 z-50 w-8 h-8 items-center justify-center rounded-full text-white/60 hover:text-white transition-colors" style={{ backgroundColor: 'rgba(255,255,255,0.10)' }}>
+        {/* Close Button Desktop */}
+        <button onClick={onClose} className="hidden md:flex absolute top-4 right-4 z-50 w-8 h-8 items-center justify-center bg-zinc-100 hover:bg-zinc-200 rounded-full text-zinc-500 hover:text-zinc-700 transition-colors">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
 
         {/* Left: Image Gallery */}
-        <div className="w-full md:w-1/2 flex flex-col relative" style={{ borderRight: '1px solid rgba(255,255,255,0.07)' }}>
-          {/* Main Image */}
-          <div className="w-full aspect-square md:aspect-[4/5] relative" style={{ backgroundColor: '#0a0918' }}>
+        <div className="w-full md:w-1/2 flex flex-col bg-zinc-50 border-b md:border-b-0 md:border-r border-zinc-100">
+          <div className="w-full aspect-square relative bg-white">
             {displayImage ? (
               <img
                 key={displayImage}
                 src={displayImage}
                 alt={product.name}
-                className="w-full h-full object-contain transition-all duration-300"
+                className="w-full h-full object-contain"
               />
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center gap-3" style={{ color: 'rgba(255,255,255,0.15)' }}>
-                <svg className="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                <span className="text-sm font-medium uppercase tracking-wider">No Image</span>
+              <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-zinc-400">
+                <svg className="w-16 h-16 mb-2 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <span className="text-sm font-medium">No Image</span>
               </div>
             )}
             {hasDiscount && !isOutOfStock && (
               <div className="absolute top-4 left-4 z-10">
-                <span className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">-{percentOff}%</span>
+                <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">-{percentOff}%</span>
               </div>
             )}
             {isOutOfStock && (
               <div className="absolute top-4 left-4 z-10">
-                <span className="bg-zinc-600 text-white text-xs font-bold px-3 py-1.5 rounded-full">Habis</span>
+                <span className="bg-zinc-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">Habis</span>
               </div>
             )}
-
-            {/* Gallery Navigation Arrows */}
-            {images.length > 1 && (
-              <>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setActiveImage((prev) => (prev === 0 ? images.length - 1 : prev - 1))
-                  }}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center backdrop-blur rounded-full shadow-sm text-white/80 hover:text-white transition-colors z-20" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setActiveImage((prev) => (prev === images.length - 1 ? 0 : prev + 1))
-                  }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center backdrop-blur rounded-full shadow-sm text-white/80 hover:text-white transition-colors z-20" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                </button>
-              </>
-            )}
           </div>
-
-          {/* Thumbnails (product gallery images) */}
           {images.length > 1 && (
-            <div className="flex gap-2 p-4 overflow-x-auto no-scrollbar border-t" style={{ borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.04)' }}>
+            <div className="flex gap-2 p-4 overflow-x-auto no-scrollbar bg-white">
               {images.map((img: string, idx: number) => (
                 <button
                   key={idx}
                   onClick={() => { setActiveImage(idx); setSelectedVariant(null) }}
-                  className={`relative shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                  className={`relative shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition-colors ${
                     !activeVariant?.imageUrl && activeImage === idx
                       ? 'border-[var(--theme-color)]'
                       : 'border-transparent hover:border-zinc-300'
@@ -206,46 +164,33 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
         </div>
 
         {/* Right: Product Info */}
-        <div className="w-full md:w-1/2 flex flex-col h-full max-h-[50vh] md:max-h-none" style={{ backgroundColor: '#111120' }}>
-          <div className="p-6 md:p-8 flex-1 overflow-y-auto no-scrollbar">
-            <h1 className="text-xl md:text-2xl font-bold text-white leading-snug mb-3">{product.name}</h1>
-
-            {/* Price */}
-            <div className="flex items-end gap-3 mb-2">
+        <div className="w-full md:w-1/2 flex flex-col h-full bg-white">
+          <div className="p-5 md:p-8 flex-1 overflow-y-auto no-scrollbar">
+            <h1 className="text-xl md:text-2xl font-bold text-zinc-900 leading-tight mb-2 pr-6 md:pr-0">{product.name}</h1>
+            
+            <div className="flex items-end gap-2 mb-4">
+              <span className="text-2xl md:text-3xl font-extrabold tracking-tight" style={{ color: isOutOfStock ? '#a1a1aa' : themeColor }}>
+                Rp {(hasVariants && selectedVariant === null ? minVariantPrice : displayPrice).toLocaleString('id-ID')}
+              </span>
               {hasDiscount && (
-                <span className="text-sm line-through font-medium" style={{ color: 'rgba(255,255,255,0.30)' }}>
+                <span className="text-sm line-through font-medium text-zinc-400 mb-1">
                   Rp {basePrice.toLocaleString('id-ID')}
                 </span>
               )}
-              <span className="text-2xl font-extrabold tracking-tight" style={{ color: isOutOfStock ? '#a1a1aa' : themeColor }}>
-                {hasVariants && selectedVariant === null ? 'Mulai ' : ''}Rp {(hasVariants && selectedVariant === null ? minVariantPrice : displayPrice).toLocaleString('id-ID')}
+            </div>
+
+            <div className="mb-6 pb-6 border-b border-zinc-100">
+              <span className="text-sm text-zinc-500">
+                Stok: <span className={`font-semibold ${isOutOfStock ? 'text-red-500' : 'text-zinc-800'}`}>{stock}</span>
               </span>
             </div>
 
-            {/* Stock indicator */}
-            <div className="mb-6">
-              {hasVariants && selectedVariant !== null && activeVariant && (
-                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.50)' }}>
-                  Stok{' '}
-                  <span className={`font-semibold ${activeVariant.stock <= 5 ? 'text-red-400' : 'text-white/80'}`}>
-                    {activeVariant.stock}
-                  </span>
-                </span>
-              )}
-              {!hasVariants && stock !== null && (
-                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.50)' }}>
-                  Stok <span className={`font-semibold ${stock <= 5 ? 'text-red-400' : 'text-white/80'}`}>{stock}</span>
-                </span>
-              )}
-            </div>
-
-            {/* Variant Picker */}
             {hasVariants && (
               <div className="mb-6">
-                <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.40)' }}>
+                <p className="text-sm font-semibold text-zinc-900 mb-3">
                   {lang === 'id' ? 'Pilih Varian' : 'Select Variant'}
                 </p>
-                <div className="flex flex-col gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {productVariants.map((v, idx) => {
                     const outOfStock = v.stock <= 0
                     const isSelected = selectedVariant === idx
@@ -255,30 +200,27 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
                         type="button"
                         onClick={() => !outOfStock && handleSelectVariant(idx)}
                         disabled={outOfStock}
-                        className={`flex items-center w-full gap-3 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
+                        className={`flex items-center gap-2 p-2 rounded-lg border text-sm font-medium transition-all ${
                           isSelected
-                            ? 'border-white bg-white/15 text-white shadow-lg'
+                            ? 'bg-zinc-50'
                             : outOfStock
-                            ? 'text-white/20 cursor-not-allowed'
-                            : 'text-white/70 hover:text-white'
+                            ? 'text-zinc-400 bg-zinc-50 cursor-not-allowed'
+                            : 'text-zinc-700 hover:border-zinc-300'
                         }`}
-                        style={isSelected ? { borderColor: themeColor, backgroundColor: `${themeColor}20` } : outOfStock ? { borderColor: 'rgba(255,255,255,0.08)' } : { borderColor: 'rgba(255,255,255,0.15)' }}
+                        style={isSelected ? { borderColor: themeColor, color: themeColor } : outOfStock ? { borderColor: '#e4e4e7' } : { borderColor: '#e4e4e7' }}
                       >
                         {v.imageUrl && v.imageUrl.startsWith('http') && (
                           <img
                             src={v.imageUrl}
                             alt={v.name}
-                            className={`w-7 h-7 rounded-lg object-cover flex-shrink-0 ${outOfStock ? 'opacity-40' : ''}`}
+                            className={`w-8 h-8 rounded object-cover flex-shrink-0 ${outOfStock ? 'opacity-50 grayscale' : ''}`}
                           />
                         )}
-                        <span>{v.name}</span>
+                        <span className="truncate">{v.name}</span>
                         {outOfStock && (
-                          <span className="text-[10px] bg-zinc-200 text-zinc-400 px-1 rounded ml-1">
-                            {lang === 'id' ? 'Habis' : 'Out'}
+                          <span className="text-[10px] bg-zinc-200 text-zinc-500 px-1 rounded ml-auto">
+                            Habis
                           </span>
-                        )}
-                        {!outOfStock && v.discount_price && Number(v.discount_price) > 0 && (
-                          <span className="text-[10px] bg-red-100 text-red-500 px-1 rounded ml-1">DISC</span>
                         )}
                       </button>
                     )
@@ -287,12 +229,11 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
               </div>
             )}
 
-            {/* Description */}
-            <div className="border-t pt-6" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-              <h3 className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.40)' }}>
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-900 mb-2">
                 {lang === 'id' ? 'Deskripsi Produk' : 'Product Description'}
               </h3>
-              <div className="text-sm leading-relaxed space-y-2" style={{ color: 'rgba(255,255,255,0.60)' }}>
+              <div className="text-sm leading-relaxed text-zinc-600 space-y-2">
                 {descriptionLines.map((line: string, i: number) => (
                   <p key={i}>{line || <>&nbsp;</>}</p>
                 ))}
@@ -300,10 +241,10 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
             </div>
           </div>
 
-          {/* CTA */}
-          <div className="p-4 md:p-6 shrink-0 md:rounded-br-2xl" style={{ borderTop: '1px solid rgba(255,255,255,0.07)', backgroundColor: 'rgba(0,0,0,0.20)' }}>
+          {/* Bottom Action Area */}
+          <div className="p-4 border-t border-zinc-100 bg-white">
             {isOutOfStock && selectedVariant !== null ? (
-              <button disabled className="w-full text-zinc-400 bg-zinc-100 text-sm md:text-base font-semibold py-3.5 rounded-xl cursor-not-allowed">
+              <button disabled className="w-full bg-zinc-100 text-zinc-400 text-sm md:text-base font-semibold py-3 md:py-3.5 rounded-xl cursor-not-allowed">
                 {lang === 'id' ? 'Stok Habis' : 'Out of Stock'}
               </button>
             ) : (
@@ -311,8 +252,8 @@ export default function ProductDetailModal({ isOpen, onClose, product, store, th
                 type="button"
                 onClick={handleAddToCart}
                 disabled={isOutOfStock}
-                className={`w-full flex items-center justify-center gap-2 text-white text-sm md:text-base font-semibold py-3.5 rounded-xl transition-all active:scale-95 shadow-lg shadow-black/5 hover:opacity-90 ${isOutOfStock ? 'bg-white/10 text-white/30 cursor-not-allowed' : ''}`}
-                style={!isOutOfStock ? { backgroundColor: hasVariants && selectedVariant === null ? '#71717a' : themeColor } : {}}
+                className={`w-full flex items-center justify-center gap-2 text-white text-sm md:text-base font-semibold py-3 md:py-3.5 rounded-xl transition-all active:scale-95 shadow hover:shadow-md ${isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''}`}
+                style={!isOutOfStock ? { backgroundColor: hasVariants && selectedVariant === null ? '#71717a' : themeColor } : { backgroundColor: '#a1a1aa' }}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                 {hasVariants && selectedVariant === null
